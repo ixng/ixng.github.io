@@ -1,0 +1,1705 @@
+/* ==========================================================================
+   Ian Gitau portfolio: Phase 1 static mock
+   --------------------------------------------------------------------------
+   How this file is organised:
+     1. Design tokens           -> copy into src/styles/global.css in Phase 2
+     2. Sprite map              -> mirrors src/assets/sprites.ts
+     3. Base / reset
+     4. Shared UI (panel, buttons, tags, bullets)
+     5. Layers (shared wrapper, jagged edges)
+     6. DepthMeter
+     7. Surface   8. Underground   9. Caverns + Chest   10. Deep caverns
+    11. SPRITES   (enhancement layer: everything above is the CSS fallback)
+    12. Reduced motion
+    13. Mock-only helpers
+
+   Fallback first: sections 3-10 paint the page with plain CSS only. That is
+   what the deployed site shows until Ian's own art exists. Section 11 swaps
+   in sprites and is the ONLY place sprite URLs are used.
+   ========================================================================== */
+
+
+/* ==========================================================================
+   1. DESIGN TOKENS
+   ========================================================================== */
+:root {
+  /* --- Sprite scale: whole numbers only (16px grid, pixelated) --- */
+  --s: 3;                             /* tiles, chest, torch, rope, ledges */
+  --s-tree: 2;                        /* surface trees */
+  --s-icon: 2;                        /* 16px link icons */
+  --px: calc(1px * var(--s));         /* one sprite pixel at tile scale */
+  --tile: calc(16px * var(--s));      /* one 16px tile at tile scale */
+
+  /* --- Spacing scale (4px base) --- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --sp-8: 64px;
+  --sp-9: 96px;
+  --sp-10: 128px;
+
+  /* --- Font stacks --- */
+  --font-pixel: "Pixelify Sans", "Silkscreen", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* --- Type scale --- */
+  --fs-xs: 0.8125rem;
+  --fs-sm: 0.9375rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.25rem;
+  --fs-xl: 1.5rem;
+  --fs-2xl: clamp(2rem, 1.4rem + 2.4vw, 2.75rem);
+  --fs-3xl: clamp(3rem, 1.6rem + 5.5vw, 5.5rem);
+  --lh-body: 1.55;
+  --lh-tight: 1.1;
+
+  /* --- Breakpoints. Reference values only: var() does not work inside
+         @media, so the media queries below repeat these literals. --- */
+  --bp-mobile: 768px;     /* below: mobile layout, no depth meter, --s: 2 */
+  --bp-wide: 1280px;      /* at/above: all five chests in one row */
+
+  /* --- Layout --- */
+  --content-max: 1120px;
+  --gutter: var(--sp-6);
+  --meter-w: 184px;               /* room kept clear on the right for the depth meter */
+  --layer-pad: var(--sp-9);
+
+  /* --- Palette: UI chrome (panels, buttons, tags, focus) --- */
+  --ui-panel: #222b63;
+  --ui-panel-hi: #2f3b85;         /* hover fill */
+  --ui-panel-edge: #6d80d9;       /* inner frame line */
+  --ui-panel-line: #0b0f2e;       /* outer frame line */
+  --ui-text: #f5f0e4;
+  --ui-text-muted: #c9cfee;
+  --ui-gold: #ffd84a;             /* Terraria hover-text yellow: hover, focus, open */
+  --ui-tag-bg: #12183f;
+  --ui-tag-edge: #3b4796;
+  --ui-tag-text: #d6dcff;
+
+  /* --- Palette: 1. Surface --- */
+  --surface-sky-top: #3d82e0;
+  --surface-sky-bottom: #b8dcfb;
+  --surface-ink: #0c1833;         /* text on the sky */
+  --surface-sun: #fff3c4;
+  --surface-cloud: #f4f8ff;
+  --surface-cloud-shade: #cddff5;
+  --surface-hill-far: #8ea6d8;
+  --surface-hill-mid: #57a9a6;
+  --surface-hill-near: #4f8f3a;
+  --surface-grass: #2f9a3c;
+  --surface-grass-light: #5ad16a;
+  --surface-grass-dark: #1b5e25;
+  --surface-dirt: #8b5e40;
+  --surface-dirt-dark: #64412b;
+  --surface-dirt-light: #a5734f;
+  --surface-bark: #8b6440;
+  --surface-bark-dark: #4f3720;
+  --surface-leaf: #23864a;
+  --surface-leaf-dark: #145a30;
+
+  /* --- Palette: 2. Underground --- */
+  --ug-wall: #3d3a34;
+  --ug-wall-dark: #24221e;
+  --ug-wall-light: #6a655b;
+  --ug-rope: #a08550;
+  --ug-rope-dark: #5e4a24;
+  --ug-torch-stick: #6b4a2a;
+  --ug-torch-flame: #ffb340;
+  --ug-torch-core: #fff1a8;
+  --ug-torch-glow: rgba(255, 170, 64, 0.24);
+
+  /* --- Palette: 3. Caverns --- */
+  --cav-wall: #47332a;
+  --cav-wall-dark: #291c16;
+  --cav-wall-light: #8a6450;
+  --cav-ledge: #7a7a7a;
+  --cav-ledge-light: #a8a8a8;
+  --cav-ledge-dark: #3a3a3a;
+  --cav-chest-gold: #d5c060;
+  --cav-chest-gold-light: #efe393;
+  --cav-chest-wood: #785c19;
+  --cav-chest-wood-dark: #5b450f;
+  --cav-chest-iron: #93a0a3;
+  --cav-chest-line: #202020;
+  --cav-chest-inside: #1a1206;
+  --cav-chest-shine: #ffe27a;
+
+  /* --- Palette: 4. Deep caverns --- */
+  --deep-wall: #1d1a1c;
+  --deep-wall-dark: #0e0c10;
+  --deep-wall-light: #34302f;
+  --deep-wall-filter: brightness(0.55) saturate(0.8);   /* darkens the cavern2 sprite */
+  --deep-stone: #4d4b52;
+  --deep-stone-dark: #2a2930;
+  --deep-stone-light: #6d6b74;
+  --deep-ruby: #e2365b;
+  --deep-sapphire: #3f7dff;
+  --deep-water: #1f4fc9;
+  --deep-water-light: #6b97f5;
+  --deep-water-deep: #0c2470;
+  --deep-glow: rgba(70, 130, 255, 0.22);
+
+  /* --- Text placed straight on cave walls (headings only) --- */
+  --wall-text: #f5efe2;
+  --wall-text-muted: #e3d8c4;
+  --wall-text-shadow: 0 var(--px) 0 #000, var(--px) var(--px) 0 #000;
+
+  /* --- Motion --- */
+  --dur-lid: 200ms;               /* chest lid: 3 steps */
+  --lid-lift: calc(var(--px) * -6);
+  --dur-water: 1.7s;              /* 17 frames, about 10 fps */
+  --dur-cloud-far: 180s;          /* one crossing of the sky, far clouds */
+  --dur-cloud-near: 120s;         /* one crossing of the sky, near clouds */
+  --dur-grass-sway: 2.4s;         /* one lean, left to right (then back) */
+  --grass-sway-angle: 4deg;       /* how far the grass leans each way */
+  /* Parallax rates for the Phase 2 scroll handler: translateY(scrollY * rate).
+     The same numbers are on the elements as data-parallax. */
+  --parallax-cloud-far: 0.5;
+  --parallax-cloud-near: 0.3;
+  --parallax-hills-back: 0.35;
+  --parallax-hills-mid: 0.22;
+  --parallax-hills-front: 0.1;
+  --parallax-trees: 0;            /* trees stay planted on the grass */
+
+  /* --- Jagged edge shape: pixel-stepped teeth (inline SVG, not a sprite) --- */
+  --edge-teeth: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 32' preserveAspectRatio='none' shape-rendering='crispEdges'%3E%3Cpath d='M0 32V24H4V18H8V12H12V6H16V2H20V8H24V14H28V20H32V16H36V10H40V14H44V22H48V32Z'/%3E%3C/svg%3E");
+}
+
+@media (max-width: 767.98px) {
+  :root {
+    --s: 2;
+    --s-tree: 1;
+    --gutter: var(--sp-4);
+    --layer-pad: var(--sp-8);
+  }
+}
+
+
+/* ==========================================================================
+   2. SPRITE MAP  (Phase 2: src/assets/sprites.ts; all gitignored files)
+   Generated by mock/tools/extract_sprites.py from reference-sprites/.
+   ========================================================================== */
+:root {
+  --spr-sky-sun: url("sprites/sun.png");                  /* 114x114 */
+  --spr-cloud-1: url("sprites/clouds-1.png");             /* 272x125 */
+  --spr-cloud-2: url("sprites/clouds-2.png");             /* 314x133 */
+  --spr-cloud-3: url("sprites/clouds-3.png");             /* 270x142 */
+  --spr-cloud-4: url("sprites/clouds-4.png");             /* 300x130 */
+  --spr-hills-back: url("sprites/hills-back.png");        /* 1024x435 */
+  --spr-hills-mid: url("sprites/hills-mid.png");          /* 1024x435 */
+  --spr-hills-front: url("sprites/hills-front.png");      /* 1024x600 */
+  --spr-tree: url("sprites/tree.png");                    /* 80x160 */
+  --spr-plants: url("sprites/plants.png");                /* 377x34 */
+  --spr-grass: url("sprites/tile-grass.png");             /* 48x16, 3 variants */
+  --spr-dirt: url("sprites/tile-dirt.png");               /* 48x48 */
+  --spr-stone: url("sprites/tile-stone.png");             /* 48x48 */
+  --spr-stone-top: url("sprites/tile-stone-top.png");     /* 48x16 */
+  --spr-ledge: url("sprites/tile-ledge.png");             /* 48x16 */
+  --spr-ledge-cap-l: url("sprites/tile-ledge-cap-l.png"); /* 16x16 */
+  --spr-ledge-cap-r: url("sprites/tile-ledge-cap-r.png"); /* 16x16 */
+  --spr-ruby: url("sprites/tile-ruby.png");               /* 16x16 */
+  --spr-sapphire: url("sprites/tile-sapphire.png");       /* 16x16 */
+  --spr-wall-dirt: url("sprites/wall-dirt.png");          /* 160x96 */
+  --spr-wall-stone: url("sprites/wall-stone.png");        /* 160x96 */
+  --spr-wall-cavern: url("sprites/wall-cavern.png");      /* 160x96 */
+  --spr-wall-deep: url("sprites/wall-deep.png");          /* 160x96 */
+  --spr-edge-dirt-stone: url("sprites/edge-dirt-stone.png");       /* 160x16 */
+  --spr-edge-stone-cavern: url("sprites/edge-stone-cavern.png");   /* 160x16 */
+  --spr-edge-cavern-deep: url("sprites/edge-cavern-deep.png");     /* 160x16 */
+  --spr-rope: url("sprites/rope.png");                    /* 16x16 */
+  --spr-rope-h: url("sprites/rope-h.png");                /* 16x16 */
+  --spr-rope-top: url("sprites/rope-top.png");            /* 10x32 */
+  --spr-torch: url("sprites/torch.png");                  /* 14x16, static */
+  --spr-chest: url("sprites/chest.png");                  /* 32x28, closed frame only */
+  --spr-cursor-key: url("sprites/cursor-key.png");        /* 28x48: key icon x2, upright */
+  --spr-cursor-key-2x: url("sprites/cursor-key@2x.png");  /* 56x96: same, for retina screens */
+  --spr-water: url("sprites/water-surface.png");          /* 1088x16: 17 frames of 64x16 */
+  /* Icons: 16x16, pre-coloured cream (--ui-text) and gold (--ui-gold) for hover */
+  --spr-icon-github: url("sprites/icon-github.png");
+  --spr-icon-github-hover: url("sprites/icon-github-hover.png");
+  --spr-icon-linkedin: url("sprites/icon-linkedin.png");
+  --spr-icon-linkedin-hover: url("sprites/icon-linkedin-hover.png");
+  --spr-icon-email: url("sprites/icon-email.png");
+  --spr-icon-email-hover: url("sprites/icon-email-hover.png");
+  --spr-icon-cv: url("sprites/icon-cv.png");
+  --spr-icon-cv-hover: url("sprites/icon-cv-hover.png");
+}
+
+
+/* ==========================================================================
+   3. BASE
+   ========================================================================== */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  image-rendering: pixelated;     /* inherited: every sprite stays crisp */
+  font-variant-ligatures: none;   /* Pixelify Sans turns "fi" into a glyph that reads as "A" */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--fs-md);
+  line-height: var(--lh-body);
+  color: var(--wall-text);
+  background: var(--deep-wall-dark);
+}
+
+main { overflow-x: clip; }
+
+h1, h2, h3 {
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-weight: 600;
+  line-height: var(--lh-tight);
+}
+
+p, ul, ol { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+
+:focus-visible {
+  outline: 3px solid var(--ui-gold);
+  outline-offset: 3px;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: fixed;
+  top: var(--sp-2);
+  left: var(--sp-2);
+  z-index: 200;
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--ui-panel);
+  color: var(--ui-text);
+  font-family: var(--font-pixel);
+  transform: translateY(-200%);
+}
+.skip-link:focus { transform: none; }
+
+
+/* ==========================================================================
+   4. SHARED UI
+   ========================================================================== */
+
+/* --- PanelFrame ----------------------------------------------------------
+   No 9-slice sprite exists in reference-sprites, so the frame is CSS:
+   dark outer line, light inner line, one-pixel notched corners. */
+.panel {
+  --panel-edge: var(--ui-panel-edge);
+  --notch: calc(var(--px) * 2);
+  position: relative;
+  padding: var(--sp-5);
+  color: var(--ui-text);
+  background: var(--ui-panel);
+  box-shadow:
+    inset 0 0 0 var(--px) var(--ui-panel-line),
+    inset 0 0 0 calc(var(--px) * 2) var(--panel-edge),
+    inset 0 calc(var(--px) * -4) 0 0 rgb(0 0 0 / 0.18);
+  clip-path: polygon(
+    var(--notch) 0, calc(100% - var(--notch)) 0,
+    calc(100% - var(--notch)) var(--notch), 100% var(--notch),
+    100% calc(100% - var(--notch)), calc(100% - var(--notch)) calc(100% - var(--notch)),
+    calc(100% - var(--notch)) 100%, var(--notch) 100%,
+    var(--notch) calc(100% - var(--notch)), 0 calc(100% - var(--notch)),
+    0 var(--notch), var(--notch) var(--notch)
+  );
+}
+
+/* --- LinkButton ----------------------------------------------------------
+   The frame lives on ::before so the focus outline is not clipped. */
+.link-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}
+
+.link-button,
+.copy-button {
+  --btn-bg: var(--ui-panel);
+  --notch: calc(var(--px) * 2);
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 52px;
+  padding: var(--sp-2) var(--sp-5);
+  border: 0;
+  font-family: var(--font-pixel);
+  font-size: var(--fs-lg);
+  font-weight: 500;
+  line-height: 1;
+  color: var(--ui-text);
+  text-decoration: none;
+  background: none;
+  cursor: pointer;
+}
+
+.link-button::before,
+.copy-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--btn-bg);
+  box-shadow:
+    inset 0 0 0 var(--px) var(--ui-panel-line),
+    inset 0 0 0 calc(var(--px) * 2) var(--ui-panel-edge),
+    inset 0 calc(var(--px) * -3) 0 0 rgb(0 0 0 / 0.22);
+  clip-path: polygon(
+    var(--notch) 0, calc(100% - var(--notch)) 0,
+    calc(100% - var(--notch)) var(--notch), 100% var(--notch),
+    100% calc(100% - var(--notch)), calc(100% - var(--notch)) calc(100% - var(--notch)),
+    calc(100% - var(--notch)) 100%, var(--notch) 100%,
+    var(--notch) calc(100% - var(--notch)), 0 calc(100% - var(--notch)),
+    0 var(--notch), var(--notch) var(--notch)
+  );
+}
+
+.link-button:hover,
+.copy-button:hover {
+  --btn-bg: var(--ui-panel-hi);
+  color: var(--ui-gold);
+}
+
+/* Icons: hidden in fallback mode (the text label carries the meaning).
+   Plain background images, not CSS masks: browsers refuse mask images on
+   pages opened straight from disk (file://), which hid the icons. */
+.icon {
+  display: none;
+  flex: none;
+  width: calc(16px * var(--s-icon));
+  height: calc(16px * var(--s-icon));
+}
+.icon--github   { --icon: var(--spr-icon-github);   --icon-hover: var(--spr-icon-github-hover); }
+.icon--linkedin { --icon: var(--spr-icon-linkedin); --icon-hover: var(--spr-icon-linkedin-hover); }
+.icon--email    { --icon: var(--spr-icon-email);    --icon-hover: var(--spr-icon-email-hover); }
+.icon--cv       { --icon: var(--spr-icon-cv);       --icon-hover: var(--spr-icon-cv-hover); }
+
+/* --- Bullets / tags / text links --- */
+.bullets {
+  display: grid;
+  gap: var(--sp-2);
+}
+.bullets li {
+  position: relative;
+  padding-left: 1.3em;
+}
+.bullets li::before {
+  content: "";
+  position: absolute;
+  left: 0.15em;
+  top: 0.6em;
+  width: 6px;
+  height: 6px;
+  background: var(--ui-gold);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.tag {
+  padding: 3px var(--sp-2) 2px;
+  font-family: var(--font-pixel);
+  font-size: var(--fs-xs);
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  color: var(--ui-tag-text);
+  background: var(--ui-tag-bg);
+  box-shadow: inset 0 0 0 2px var(--ui-tag-edge);
+}
+
+.text-link {
+  color: var(--ui-text);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+.text-link:hover { color: var(--ui-gold); }
+
+
+/* ==========================================================================
+   5. LAYERS
+   ========================================================================== */
+.layer {
+  --wall: #000;
+  position: relative;
+  padding-block: var(--layer-pad);
+}
+
+/* Each underground layer paints its wall on ::before. */
+.layer--underground::before,
+.layer--caverns::before,
+.layer--deep::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Content column. On desktop the right padding keeps clear of the fixed
+   depth meter; on wide screens the normal centring gutter is already enough. */
+.layer__inner {
+  --side: max(var(--gutter), calc((100% - var(--content-max)) / 2));
+  position: relative;
+  z-index: 1;
+  padding-inline: var(--side);
+}
+@media (min-width: 768px) {
+  .layer__inner {
+    padding-right: max(var(--side), calc(var(--meter-w) + var(--gutter)));
+  }
+}
+
+.layer__header { margin-bottom: var(--sp-8); }
+
+.layer__eyebrow {
+  font-family: var(--font-pixel);
+  font-size: var(--fs-sm);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--wall-text-muted);
+  text-shadow: var(--wall-text-shadow);
+}
+
+.layer__title {
+  margin-top: var(--sp-1);
+  font-size: var(--fs-2xl);
+  color: var(--wall-text);
+  text-shadow: var(--wall-text-shadow);
+}
+
+.layer__hint {
+  margin-top: var(--sp-3);
+  font-size: var(--fs-sm);
+  color: var(--wall-text-muted);
+  text-shadow: var(--wall-text-shadow);
+}
+
+/* --- Jagged edge where a layer meets the one above ------------------------
+   Sits on top of the layer above. Fallback: pixel-stepped teeth in this
+   layer's wall colour. Sprite: the matching 160x16 transition strip. */
+.layer__edge {
+  --edge-shift: 0px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  z-index: 2;
+  height: var(--tile);
+  pointer-events: none;
+  background: var(--wall);
+  -webkit-mask: var(--edge-teeth) var(--edge-shift) 100% / calc(48px * var(--s)) 100% repeat-x;
+  mask: var(--edge-teeth) var(--edge-shift) 100% / calc(48px * var(--s)) 100% repeat-x;
+}
+.layer__edge--stone-cavern { --edge-shift: calc(var(--tile) * 1.25); }
+.layer__edge--cavern-deep  { --edge-shift: calc(var(--tile) * 0.5); }
+
+
+/* ==========================================================================
+   6. DEPTH METER  (desktop only; fixed on the right)
+   ========================================================================== */
+.depth-meter {
+  --notch: 4px;
+  position: fixed;
+  top: 50%;
+  right: var(--sp-4);
+  z-index: 50;
+  width: calc(var(--meter-w) - var(--sp-5));
+  padding: var(--sp-4) var(--sp-4) var(--sp-3);
+  color: var(--ui-text);
+  background: rgb(17 22 58 / 0.92);
+  box-shadow:
+    inset 0 0 0 2px var(--ui-panel-line),
+    inset 0 0 0 4px var(--ui-panel-edge);
+  clip-path: polygon(
+    var(--notch) 0, calc(100% - var(--notch)) 0,
+    calc(100% - var(--notch)) var(--notch), 100% var(--notch),
+    100% calc(100% - var(--notch)), calc(100% - var(--notch)) calc(100% - var(--notch)),
+    calc(100% - var(--notch)) 100%, var(--notch) 100%,
+    var(--notch) calc(100% - var(--notch)), 0 calc(100% - var(--notch)),
+    0 var(--notch), var(--notch) var(--notch)
+  );
+  transform: translateY(-50%);
+}
+
+@media (max-width: 767.98px) {
+  .depth-meter { display: none; }
+}
+
+/* Readout, like the game's "250' Underground" text. Decorative (aria-hidden);
+   its text is set from the current link's data-readout while scrolling. */
+.depth-meter__readout {
+  margin-bottom: var(--sp-3);
+  padding-bottom: var(--sp-2);
+  font-family: var(--font-pixel);
+  font-size: var(--fs-sm);
+  color: var(--ui-gold);
+  border-bottom: 2px solid var(--ui-tag-edge);
+}
+
+.depth-meter__list {
+  position: relative;
+  display: grid;
+  gap: var(--sp-2);
+}
+/* The track the nodes sit on */
+.depth-meter__list::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: 6px;
+  width: 4px;
+  background: var(--ui-tag-edge);
+}
+
+/* Progress marker: a small gold box that travels down the track from the
+   current layer's node towards the next one as you scroll through the layer.
+   --marker-y (px from the top of the list) is set by the scroll tracker.
+   It sits BEHIND the nodes (z-index 0 vs 1) and is smaller than them, so it
+   disappears as it slides under a node and reappears as it leaves. */
+.depth-meter__list::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: 3px;                      /* centred on the 4px track at x = 8px */
+  width: 10px;
+  height: 10px;
+  background: var(--ui-gold);
+  box-shadow: 0 0 0 2px var(--ui-panel-line);
+  transform: translateY(calc(var(--marker-y, 14px) - 5px));
+  pointer-events: none;
+}
+
+.depth-meter__link {
+  position: relative;
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-1) 0;
+  color: var(--ui-text-muted);
+  text-decoration: none;
+}
+
+.depth-meter__node {
+  position: relative;
+  z-index: 1;                     /* above the progress marker */
+  width: 16px;
+  height: 16px;
+  background: var(--node);
+  box-shadow: inset 0 0 0 2px var(--ui-panel-line);
+}
+
+.depth-meter__label {
+  font-family: var(--font-pixel);
+  font-size: var(--fs-sm);
+  line-height: 1.15;
+}
+.depth-meter__label small {
+  display: block;
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
+  color: var(--ui-text-muted);
+}
+
+.depth-meter__link:hover { color: var(--ui-gold); }
+
+/* Active layer: the link for the layer in view gets aria-current="location"
+   (set by the scroll tracker; Phase 2 sets it from React state). */
+.depth-meter__link[aria-current="location"] {
+  color: var(--ui-text);
+}
+.depth-meter__link[aria-current="location"] .depth-meter__node {
+  box-shadow: inset 0 0 0 2px var(--ui-panel-line), 0 0 0 3px var(--ui-gold);
+}
+
+
+/* ==========================================================================
+   7. SURFACE  (intro)
+   ========================================================================== */
+.layer--surface {
+  padding: 0;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--surface-sky-top), var(--surface-sky-bottom) 80%);
+}
+
+.sky {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sun {
+  position: absolute;
+  top: var(--sp-6);
+  right: max(8%, calc(var(--meter-w) + var(--sp-7)));
+  width: 114px;
+  height: 114px;
+  background: radial-gradient(circle, var(--surface-sun) 0 30%, rgb(255 243 196 / 0.45) 31% 42%, transparent 62%);
+}
+
+/* Clouds drift left to right and loop. The drift uses the `translate`
+   property, so Phase 2's parallax can own `transform` (translateY) without
+   the two fighting. Negative delays spread the clouds across the sky on
+   load. --cloud-x is where each cloud rests when motion is reduced.
+   Fallback: one blocky cloud per element. */
+.cloud {
+  position: absolute;
+  left: 0;
+  translate: var(--cloud-x) 0;
+  animation: cloud-drift var(--cloud-dur) linear var(--cloud-delay) infinite;
+  background: var(--surface-cloud);
+  box-shadow: inset 0 calc(var(--px) * -3) 0 var(--surface-cloud-shade);
+  clip-path: polygon(
+    8% 100%, 8% 72%, 18% 72%, 18% 50%, 34% 50%, 34% 30%, 58% 30%, 58% 44%,
+    72% 44%, 72% 62%, 86% 62%, 86% 78%, 94% 78%, 94% 100%
+  );
+}
+/* Far clouds (1, 3) are slower than near ones (2, 4) */
+.cloud--1 { top: 4%;  width: 272px; height: 125px; --cloud-x: 2vw;  --cloud-dur: var(--dur-cloud-far);  --cloud-delay: calc(var(--dur-cloud-far) * -0.15); }
+.cloud--2 { top: 10%; width: 314px; height: 133px; --cloud-x: 44vw; --cloud-dur: var(--dur-cloud-near); --cloud-delay: calc(var(--dur-cloud-near) * -0.55); }
+.cloud--3 { top: 34%; width: 270px; height: 142px; --cloud-x: 64vw; --cloud-dur: var(--dur-cloud-far);  --cloud-delay: calc(var(--dur-cloud-far) * -0.7); }
+.cloud--4 { top: 46%; width: 300px; height: 130px; --cloud-x: -6vw; --cloud-dur: var(--dur-cloud-near); --cloud-delay: calc(var(--dur-cloud-near) * -0.05); }
+
+@keyframes cloud-drift {
+  from { translate: -100% 0; }    /* just off the left edge */
+  to   { translate: 100vw 0; }    /* just off the right edge */
+}
+
+@media (max-width: 767.98px) {
+  .cloud--2, .cloud--4 { display: none; }
+  .cloud--3 { top: 40%; --cloud-x: 52vw; }
+  .sun { right: var(--sp-4); }
+}
+
+.surface__intro {
+  padding-top: calc(var(--sp-10) + var(--sp-5));
+  padding-bottom: var(--sp-7);
+}
+
+.surface__name {
+  font-size: var(--fs-3xl);
+  font-weight: 700;
+  color: var(--surface-ink);
+  text-shadow: var(--px) var(--px) 0 rgb(255 255 255 / 0.6);
+}
+
+.surface__tagline {
+  max-width: 30ch;
+  margin-top: var(--sp-4);
+  font-size: var(--fs-xl);
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--surface-ink);
+}
+
+.surface__intro .link-row { margin-top: var(--sp-6); }
+
+@media (max-width: 767.98px) {
+  .surface__intro { padding-top: var(--sp-10); }
+  .surface__tagline { font-size: var(--fs-lg); }
+}
+
+/* Scenery band: hills (parallax) and trees, sitting on the ground. */
+.scenery {
+  position: relative;
+  height: calc(var(--tile) * 6);
+  pointer-events: none;
+}
+
+.hills {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+/* Fallback hills: blocky silhouettes */
+.hills--back {
+  top: 0;
+  background: var(--surface-hill-far);
+  clip-path: polygon(
+    0 60%, 8% 60%, 8% 42%, 14% 42%, 14% 30%, 20% 30%, 20% 48%, 30% 48%, 30% 22%,
+    36% 22%, 36% 8%, 42% 8%, 42% 30%, 52% 30%, 52% 44%, 62% 44%, 62% 26%, 70% 26%,
+    70% 14%, 76% 14%, 76% 34%, 86% 34%, 86% 50%, 94% 50%, 94% 40%, 100% 40%, 100% 100%, 0 100%
+  );
+}
+.hills--mid {
+  top: 30%;
+  background: var(--surface-hill-mid);
+  clip-path: polygon(
+    0 40%, 10% 40%, 10% 28%, 24% 28%, 24% 16%, 38% 16%, 38% 34%, 50% 34%, 50% 22%,
+    66% 22%, 66% 10%, 80% 10%, 80% 30%, 92% 30%, 92% 20%, 100% 20%, 100% 100%, 0 100%
+  );
+}
+.hills--front {
+  top: 55%;
+  background: var(--surface-hill-near);
+  clip-path: polygon(
+    0 30%, 14% 30%, 14% 14%, 32% 14%, 32% 34%, 48% 34%, 48% 18%, 70% 18%,
+    70% 6%, 86% 6%, 86% 26%, 100% 26%, 100% 100%, 0 100%
+  );
+}
+
+/* Trees. Fallback: trunk on ::before, blocky canopy on ::after. */
+.tree {
+  position: absolute;
+  bottom: calc(var(--px) * -1);
+  width: calc(80px * var(--s-tree));
+  height: calc(160px * var(--s-tree));
+}
+.tree::before {
+  content: "";
+  position: absolute;
+  left: 37.5%;
+  width: 25%;
+  top: 45%;
+  bottom: 0;
+  background: linear-gradient(90deg, var(--surface-bark-dark) 0 15%, var(--surface-bark) 15% 85%, var(--surface-bark-dark) 85%);
+}
+.tree::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 52%;
+  background: var(--surface-leaf);
+  box-shadow: inset 0 calc(var(--px) * -6) 0 var(--surface-leaf-dark);
+  clip-path: polygon(
+    20% 100%, 20% 88%, 6% 88%, 6% 64%, 0 64%, 0 30%, 10% 30%, 10% 14%, 28% 14%, 28% 0,
+    72% 0, 72% 14%, 90% 14%, 90% 30%, 100% 30%, 100% 64%, 94% 64%, 94% 88%, 80% 88%, 80% 100%
+  );
+}
+.tree--a { right: 6%; }
+.tree--b { right: 22%; }
+.tree--c { left: 2%; }
+
+@media (max-width: 1279.98px) {
+  .tree--c { display: none; }
+}
+@media (max-width: 767.98px) {
+  .tree--b { right: 34%; }
+}
+
+/* Ground: one row of grass, two rows of dirt. */
+.ground { position: relative; z-index: 1; }
+
+.ground__grass {
+  position: relative;
+  height: var(--tile);
+  background:
+    linear-gradient(
+      var(--surface-grass-light) 0 calc(var(--px) * 2),
+      var(--surface-grass) 0 calc(var(--px) * 6),
+      var(--surface-grass-dark) 0 calc(var(--px) * 8),
+      var(--surface-dirt) 0
+    );
+}
+
+.ground__dirt {
+  height: calc(var(--tile) * 2);
+  background-color: var(--surface-dirt);
+  background-image:
+    conic-gradient(from 270deg at calc(var(--px) * 4) calc(var(--px) * 4), var(--surface-dirt-dark) 90deg, transparent 0),
+    conic-gradient(from 270deg at calc(var(--px) * 4) calc(var(--px) * 4), var(--surface-dirt-light) 90deg, transparent 0);
+  background-size: var(--tile) var(--tile), calc(var(--tile) * 1.5) calc(var(--tile) * 1.5);
+  background-position: calc(var(--px) * 3) calc(var(--px) * 5), calc(var(--px) * 11) calc(var(--px) * 10);
+}
+
+
+/* ==========================================================================
+   8. UNDERGROUND  (experience: mineshaft timeline)
+   ========================================================================== */
+.layer--underground { --wall: var(--ug-wall); }
+
+.layer--underground::before {
+  background:
+    radial-gradient(circle at 30% 40%, rgb(255 255 255 / 0.03) 0 18%, transparent 19%) 0 0 / 140px 110px,
+    radial-gradient(circle at 70% 70%, rgb(0 0 0 / 0.06) 0 22%, transparent 23%) 0 0 / 180px 130px,
+    linear-gradient(180deg, var(--ug-wall) 0%, var(--ug-wall-dark) 100%);
+}
+
+.mineshaft {
+  position: relative;
+  display: grid;
+  gap: var(--sp-8);
+  padding-top: calc(var(--tile) * 2);
+}
+
+/* The rope: from the top of the list down through the rest of the layer. */
+.mineshaft::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: calc(var(--layer-pad) * -1);
+  left: calc(50% - var(--tile) / 2);
+  width: var(--tile);
+  background:
+    repeating-linear-gradient(
+      180deg,
+      var(--ug-rope) 0 calc(var(--px) * 3),
+      var(--ug-rope-dark) 0 calc(var(--px) * 4)
+    ) center / calc(var(--px) * 6) 100% no-repeat;
+}
+/* Rope anchor at the top */
+.mineshaft::after {
+  content: "";
+  position: absolute;
+  top: calc(var(--px) * -4);
+  left: calc(50% - var(--px) * 5);
+  width: calc(var(--px) * 10);
+  height: calc(var(--px) * 8);
+  background: var(--ug-rope-dark);
+  box-shadow: inset 0 0 0 var(--px) #2a2010;
+}
+
+.timeline-entry {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr var(--tile) 1fr;
+  align-items: start;
+}
+.timeline-entry--right .timeline-entry__panel { grid-column: 3; }
+.timeline-entry--left  .timeline-entry__panel { grid-column: 1; grid-row: 1; }
+
+/* Short horizontal rope from the main rope to the panel */
+.timeline-entry__hook {
+  position: absolute;
+  top: calc(var(--sp-5) + var(--px) * 2);
+  height: var(--tile);
+  width: calc(var(--tile) * 1.5);
+  background:
+    repeating-linear-gradient(
+      90deg,
+      var(--ug-rope) 0 calc(var(--px) * 3),
+      var(--ug-rope-dark) 0 calc(var(--px) * 4)
+    ) center / 100% calc(var(--px) * 6) no-repeat;
+}
+.timeline-entry--right .timeline-entry__hook { left: calc(50% - var(--tile) * 0.5); }
+.timeline-entry--left  .timeline-entry__hook { right: calc(50% - var(--tile) * 0.5); }
+
+.timeline-entry__panel {
+  margin-inline: var(--tile);
+}
+
+/* Static wall torch on the side of the rope opposite the panel. */
+.torch {
+  position: absolute;
+  top: 0;
+  width: calc(14px * var(--s));
+  height: calc(16px * var(--s));
+  /* fallback: stick + flame */
+  background:
+    linear-gradient(var(--ug-torch-core), var(--ug-torch-core)) calc(var(--px) * 9) calc(var(--px) * 2) / calc(var(--px) * 2) calc(var(--px) * 2) no-repeat,
+    linear-gradient(var(--ug-torch-flame), var(--ug-torch-flame)) calc(var(--px) * 8) 0 / calc(var(--px) * 4) calc(var(--px) * 5) no-repeat,
+    linear-gradient(var(--ug-torch-stick), var(--ug-torch-stick)) calc(var(--px) * 9) calc(var(--px) * 5) / calc(var(--px) * 2) calc(var(--px) * 11) no-repeat;
+}
+/* Static light pool around the flame */
+.torch::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 20%;
+  width: 360px;
+  height: 360px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, var(--ug-torch-glow) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: -1;
+}
+.timeline-entry--right .torch { right: calc(50% + var(--tile) * 2); }
+.timeline-entry--left  .torch { left: calc(50% + var(--tile) * 2); }
+
+.timeline-entry__role { font-size: var(--fs-xl); }
+
+.timeline-entry__org {
+  margin-top: var(--sp-2);
+  font-weight: 600;
+}
+
+.timeline-entry__dates {
+  margin-top: var(--sp-1);
+  font-family: var(--font-pixel);
+  font-size: var(--fs-sm);
+  color: var(--ui-text-muted);
+}
+
+.timeline-entry__panel .bullets {
+  margin-top: var(--sp-4);
+  font-size: var(--fs-sm);
+}
+
+/* Below the wide breakpoint the rope moves to the left and every panel hangs
+   to its right; two columns would make the panels too narrow to read. */
+@media (max-width: 1279.98px) {
+  .mineshaft { padding-top: calc(var(--tile) * 1.5); }
+  .mineshaft::before { left: 0; }
+  .mineshaft::after { left: calc(var(--tile) / 2 - var(--px) * 5); }
+
+  .timeline-entry { grid-template-columns: var(--tile) 1fr; }
+  .timeline-entry--right .timeline-entry__panel,
+  .timeline-entry--left  .timeline-entry__panel { grid-column: 2; grid-row: 1; }
+  .timeline-entry__panel { margin-inline: var(--tile) 0; max-width: 680px; }
+
+  .timeline-entry--right .timeline-entry__hook,
+  .timeline-entry--left  .timeline-entry__hook { left: calc(var(--tile) / 2); right: auto; }
+
+  /* Torch mounted on the wall just above the panel's top-right corner */
+  .timeline-entry--right .torch,
+  .timeline-entry--left  .torch {
+    left: auto;
+    right: var(--sp-4);
+    top: calc(var(--tile) * -1 - var(--sp-1));
+  }
+  .torch::before { width: 220px; height: 220px; }
+}
+@media (max-width: 767.98px) {
+  .timeline-entry__panel { padding: var(--sp-4); }
+}
+
+
+/* ==========================================================================
+   9. CAVERNS  (projects: chests on ledges)
+   ========================================================================== */
+.layer--caverns { --wall: var(--cav-wall); }
+
+.layer--caverns::before {
+  background:
+    linear-gradient(to bottom right, transparent 48%, rgb(0 0 0 / 0.16) 49% 51%, transparent 52%) 0 0 / 160px 160px,
+    radial-gradient(ellipse at 50% 0%, rgb(255 255 255 / 0.05) 0 30%, transparent 31%) 0 0 / 120px 200px,
+    linear-gradient(180deg, var(--cav-wall) 0%, var(--cav-wall-dark) 100%);
+}
+
+/* One chest per row, stacked top to bottom */
+.chests {
+  display: grid;
+  gap: var(--sp-7);
+}
+
+@media (max-width: 767.98px) {
+  .chests { gap: var(--sp-6); }
+}
+
+/* --- Chest -----------------------------------------------------------------
+   Open when: pinned by click/tap/Enter/Space (.is-open), keyboard focus
+   inside (:focus-visible), or mouse hover on hover-capable desktops.
+   Every open-state difference is a custom property, so the three triggers
+   share one bundle. Phase 2: open = pinned || hovered || focusVisible. */
+/* Row layout: the chest on its ledge on the left, text on the right.
+   768-1279px: open content ("loot") sits under the label in the text column.
+   1280px and up: loot gets its own column to the right of the label.
+   The empty grid rows soak up extra height so the chest and ledge stay
+   together at the top of the row. */
+.chest {
+  --chest-col: calc(var(--tile) * 3);
+  display: grid;
+  grid-template-columns: var(--chest-col) minmax(0, 1fr);
+  grid-template-rows: auto auto 1fr auto;
+  grid-template-areas:
+    "sprite label"
+    "ledge  label"
+    ".      label"
+    ".      loot";
+  column-gap: var(--sp-5);
+  align-items: start;
+}
+
+@media (min-width: 1280px) {
+  .chest {
+    grid-template-columns: var(--chest-col) minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas:
+      "sprite label loot"
+      "ledge  label loot"
+      ".      label loot";
+  }
+}
+
+/* Phones: chest and label side by side, loot below across the full width */
+@media (max-width: 767.98px) {
+  .chest {
+    column-gap: var(--sp-4);
+    grid-template-columns: var(--chest-col) minmax(0, 1fr);
+    grid-template-areas:
+      "sprite label"
+      "ledge  label"
+      ".      label"
+      "loot   loot";
+  }
+}
+
+.chest.is-open,
+.chest:has(:focus-visible) {
+  --lid-y: var(--lid-lift);
+  --chest-glow:
+    drop-shadow(var(--px) 0 0 var(--ui-gold))
+    drop-shadow(calc(var(--px) * -1) 0 0 var(--ui-gold))
+    drop-shadow(0 calc(var(--px) * -1) 0 var(--ui-gold));
+  --label-edge: var(--ui-gold);
+  --loot-visibility: visible;
+  --loot-display: block;
+  --hint: "\2212";              /* minus */
+}
+@media (hover: hover) and (min-width: 768px) {
+  .chest:hover {
+    --lid-y: var(--lid-lift);
+    --chest-glow:
+      drop-shadow(var(--px) 0 0 var(--ui-gold))
+      drop-shadow(calc(var(--px) * -1) 0 0 var(--ui-gold))
+      drop-shadow(0 calc(var(--px) * -1) 0 var(--ui-gold));
+    --label-edge: var(--ui-gold);
+    --loot-visibility: visible;
+    --loot-display: block;
+    --hint: "\2212";
+  }
+}
+
+.chest__sprite {
+  grid-area: sprite;
+  justify-self: center;
+  position: relative;
+  width: calc(32px * var(--s));
+  height: calc(28px * var(--s));
+  cursor: pointer;
+  filter: var(--chest-glow, none);
+}
+
+/* Lid = top 12px of the 32x28 chest, base = bottom 16px. Opening lifts the
+   lid 6px in 3 steps and shows the dark, lit interior behind it. */
+.chest__lid,
+.chest__base,
+.chest__inside {
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
+.chest__lid {
+  top: 0;
+  z-index: 2;
+  height: calc(12px * var(--s));
+  transform: translateY(var(--lid-y, 0));
+  transition: transform var(--dur-lid) steps(3, end);
+  /* fallback: gold lid with dark outline and iron latch */
+  background:
+    linear-gradient(var(--cav-chest-iron), var(--cav-chest-iron)) 50% 0 / calc(var(--px) * 4) 100% no-repeat,
+    linear-gradient(var(--cav-chest-gold-light) 0 45%, var(--cav-chest-gold) 45% 80%, var(--cav-chest-wood) 80%);
+  box-shadow: inset 0 0 0 calc(var(--px) * 2) var(--cav-chest-line);
+}
+
+.chest__base {
+  bottom: 0;
+  z-index: 1;
+  height: calc(16px * var(--s));
+  background:
+    linear-gradient(var(--cav-chest-iron), var(--cav-chest-iron)) 50% 0 / calc(var(--px) * 4) calc(var(--px) * 6) no-repeat,
+    linear-gradient(var(--cav-chest-iron) 0 calc(var(--px) * 2), var(--cav-chest-gold) 0 55%, var(--cav-chest-wood) 55% 85%, var(--cav-chest-wood-dark) 85%);
+  box-shadow: inset 0 0 0 calc(var(--px) * 2) var(--cav-chest-line);
+}
+
+.chest__inside {
+  top: calc(var(--px) * 2);
+  left: calc(var(--px) * 2);
+  right: calc(var(--px) * 2);
+  height: calc(12px * var(--s));
+  z-index: 0;
+  background: linear-gradient(0deg, var(--cav-chest-shine) 0 calc(var(--px) * 2), var(--cav-chest-inside) calc(var(--px) * 2));
+}
+
+/* --- Ledge: one tile tall, stepped ends --- */
+.ledge {
+  --notch: calc(var(--px) * 2);
+  grid-area: ledge;
+  position: relative;
+  width: 100%;
+  height: var(--tile);
+  background: var(--cav-ledge);
+  box-shadow:
+    inset 0 calc(var(--px) * 2) 0 var(--cav-ledge-light),
+    inset 0 calc(var(--px) * -3) 0 var(--cav-ledge-dark);
+  clip-path: polygon(
+    var(--notch) 0, calc(100% - var(--notch)) 0, calc(100% - var(--notch)) var(--notch),
+    100% var(--notch), 100% calc(100% - var(--notch) * 2), calc(100% - var(--notch)) calc(100% - var(--notch) * 2),
+    calc(100% - var(--notch)) 100%, var(--notch) 100%, var(--notch) calc(100% - var(--notch) * 2),
+    0 calc(100% - var(--notch) * 2), 0 var(--notch), var(--notch) var(--notch)
+  );
+  cursor: pointer;
+}
+
+/* --- Closed content: label panel to the right of the chest --- */
+.chest__label {
+  --panel-edge: var(--label-edge, var(--ui-panel-edge));
+  grid-area: label;
+  width: 100%;
+  padding: var(--sp-4);
+  cursor: pointer;
+}
+
+.chest__title { font-size: var(--fs-lg); }
+
+.chest__toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: var(--ui-text);
+  cursor: pointer;
+}
+.chest__toggle:hover { color: var(--ui-gold); }
+
+.chest__hint::before {
+  content: var(--hint, "+");
+  font-family: var(--font-pixel);
+  color: var(--ui-gold);
+}
+
+.chest__summary {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+  color: var(--ui-text-muted);
+}
+
+.chest__label .tags { margin-top: var(--sp-3); }
+
+/* --- Open content ("loot") ---
+   768px and up: its space is always reserved (visibility), so opening never
+   moves the page or covers another chest. It sits under the label up to
+   1279px and to the right of it from 1280px. Phones: it appears below the
+   row and pushes the next chest down. */
+.chest__loot {
+  --panel-edge: var(--cav-chest-gold);
+  grid-area: loot;
+  width: 100%;
+  margin-top: var(--sp-2);
+  padding: var(--sp-4);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+  visibility: var(--loot-visibility, hidden);
+}
+
+.chest__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-4);
+  margin-top: var(--sp-4);
+  font-weight: 600;
+}
+
+@media (min-width: 1280px) {
+  .chest__loot { margin-top: 0; }
+}
+@media (max-width: 767.98px) {
+  .chest__loot {
+    display: var(--loot-display, none);
+    visibility: visible;
+    margin-top: var(--sp-3);
+  }
+}
+
+
+/* ==========================================================================
+   10. DEEP CAVERNS  (contact: gem veins, still pool)
+   ========================================================================== */
+.layer--deep {
+  --wall: var(--deep-wall);
+  padding-bottom: 0;
+}
+
+.layer--deep::before {
+  background:
+    radial-gradient(ellipse at 50% 100%, rgb(63 125 255 / 0.10) 0 40%, transparent 70%),
+    radial-gradient(circle at 20% 30%, rgb(255 255 255 / 0.03) 0 16%, transparent 17%) 0 0 / 160px 120px,
+    linear-gradient(180deg, var(--deep-wall) 0%, var(--deep-wall-dark) 100%);
+}
+
+/* Gem veins: stepped diagonal clusters of gem ore set into the walls.
+   Fallback: dark stone with square gem flecks. */
+.gem-vein {
+  position: absolute;
+  z-index: 0;
+  width: calc(var(--tile) * 4);
+  height: calc(var(--tile) * 3);
+  background-color: var(--deep-stone);
+  background-image:
+    conic-gradient(from 270deg at calc(var(--px) * 4) calc(var(--px) * 4), var(--gem) 90deg, transparent 0),
+    conic-gradient(from 270deg at calc(var(--px) * 3) calc(var(--px) * 3), var(--gem) 90deg, transparent 0),
+    linear-gradient(var(--deep-stone-light) 0 var(--px), transparent var(--px));
+  background-size: var(--tile) var(--tile), var(--tile) var(--tile), var(--tile) var(--tile);
+  background-position: calc(var(--px) * 3) calc(var(--px) * 4), calc(var(--px) * 10) calc(var(--px) * 10), 0 0;
+  box-shadow: inset 0 0 0 var(--px) var(--deep-stone-dark);
+  clip-path: polygon(
+    0 66.67%, 25% 66.67%, 25% 33.33%, 50% 33.33%, 50% 0, 100% 0, 100% 33.33%,
+    75% 33.33%, 75% 66.67%, 50% 66.67%, 50% 100%, 0 100%
+  );
+}
+.gem-vein--ruby     { --gem: var(--deep-ruby); }
+.gem-vein--sapphire { --gem: var(--deep-sapphire); }
+
+.gem-vein--a { top: 14%; left: calc(var(--tile) * -1); }
+.gem-vein--b { top: 6%;  right: 10%; transform: scaleX(-1); }
+.gem-vein--c { top: 52%; left: 4%; transform: scaleX(-1); }
+.gem-vein--d { bottom: calc(var(--tile) * 5); right: -2%; }
+
+@media (max-width: 767.98px) {
+  .gem-vein { width: calc(var(--tile) * 4); height: calc(var(--tile) * 3); }
+  .gem-vein--a { top: 4%; left: auto; right: calc(var(--tile) * -1.5); }
+  .gem-vein--b { display: none; }
+  .gem-vein--c { top: auto; bottom: calc(var(--tile) * 5); left: calc(var(--tile) * -1.5); }
+  .gem-vein--d { display: none; }
+}
+
+/* --- Contact panel --- */
+.contact {
+  max-width: 640px;
+  padding: var(--sp-6);
+}
+
+.contact__lead {
+  font-size: var(--fs-lg);
+  line-height: 1.4;
+}
+
+.contact__email {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-4);
+  margin-top: var(--sp-5);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--ui-tag-bg);
+  box-shadow: inset 0 0 0 2px var(--ui-tag-edge);
+}
+
+.contact__label {
+  font-family: var(--font-pixel);
+  font-size: var(--fs-sm);
+  color: var(--ui-text-muted);
+}
+
+.contact__address {
+  flex: 1 1 auto;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.copy-button {
+  min-height: 44px;
+  padding: var(--sp-1) var(--sp-4);
+  font-size: var(--fs-md);
+}
+.copy-button[data-state="copied"] {
+  --btn-bg: var(--ui-panel-hi);
+  color: var(--ui-gold);
+}
+
+.contact .link-row { margin-top: var(--sp-5); }
+
+/* Closing note under the buttons: one line about life outside code */
+.contact__extra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-1) var(--sp-3);
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
+  border-top: 2px solid var(--ui-tag-edge);
+  font-size: var(--fs-sm);
+  color: var(--ui-text-muted);
+}
+
+.contact__extra-label {
+  font-family: var(--font-pixel);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ui-gold);
+}
+
+@media (max-width: 767.98px) {
+  .contact { padding: var(--sp-5) var(--sp-4); }
+  .link-button { font-size: var(--fs-md); padding-inline: var(--sp-4); }
+}
+
+/* --- Pool: a stepped basin cut into the cavern floor -------------------------
+   Layers, back to front: rim (dark outline), water, stone. The stone has the
+   basin clipped out of it; each row of the basin is one tile narrower than
+   the row above, like dug-out Terraria terrain. The water is clipped to the
+   same shape shrunk by --rim, so a dark tile-edge line separates the two.
+   The water line sits a few pixels below the bank, so the stone lips show. */
+.pool {
+  --bank: 12%;                          /* stone bank width at the water line */
+  --step: var(--tile);                  /* each basin row is one tile narrower per side */
+  --rim: calc(var(--px) * 2);
+  --waterline: calc(var(--px) * 4);
+  position: relative;
+  z-index: 1;
+  margin-top: var(--sp-10);
+  height: calc(var(--tile) * 4);
+}
+
+.pool__glow {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 100%;
+  height: 260px;
+  background: radial-gradient(ellipse at 50% 100%, var(--deep-glow), transparent 70%);
+  pointer-events: none;
+}
+
+.pool__rim,
+.pool__water,
+.pool__stone {
+  position: absolute;
+  inset: 0;
+}
+
+.pool__rim {
+  top: var(--waterline);
+  left: var(--bank);
+  right: var(--bank);
+  background: var(--deep-stone-dark);
+}
+
+.pool__stone {
+  /* fallback stone */
+  background-color: var(--deep-stone);
+  background-image:
+    linear-gradient(var(--deep-stone-light) 0 calc(var(--px) * 2), transparent 0),
+    linear-gradient(90deg, var(--deep-stone-dark) 0 var(--px), transparent var(--px));
+  background-size: 100% var(--tile), var(--tile) var(--tile);
+  background-repeat: no-repeat, repeat;
+  clip-path: polygon(
+    0 0,
+    var(--bank) 0,
+    var(--bank) var(--tile),
+    calc(var(--bank) + var(--step)) var(--tile),
+    calc(var(--bank) + var(--step)) calc(var(--tile) * 2),
+    calc(var(--bank) + var(--step) * 2) calc(var(--tile) * 2),
+    calc(var(--bank) + var(--step) * 2) calc(var(--tile) * 3),
+    calc(100% - var(--bank) - var(--step) * 2) calc(var(--tile) * 3),
+    calc(100% - var(--bank) - var(--step) * 2) calc(var(--tile) * 2),
+    calc(100% - var(--bank) - var(--step)) calc(var(--tile) * 2),
+    calc(100% - var(--bank) - var(--step)) var(--tile),
+    calc(100% - var(--bank)) var(--tile),
+    calc(100% - var(--bank)) 0,
+    100% 0,
+    100% 100%,
+    0 100%
+  );
+}
+
+/* Same outline as the hole in .pool__stone, moved in by --rim */
+.pool__water {
+  clip-path: polygon(
+    calc(var(--bank) + var(--rim)) 0,
+    calc(var(--bank) + var(--rim)) calc(var(--tile) - var(--rim)),
+    calc(var(--bank) + var(--step) + var(--rim)) calc(var(--tile) - var(--rim)),
+    calc(var(--bank) + var(--step) + var(--rim)) calc(var(--tile) * 2 - var(--rim)),
+    calc(var(--bank) + var(--step) * 2 + var(--rim)) calc(var(--tile) * 2 - var(--rim)),
+    calc(var(--bank) + var(--step) * 2 + var(--rim)) calc(var(--tile) * 3 - var(--rim)),
+    calc(100% - var(--bank) - var(--step) * 2 - var(--rim)) calc(var(--tile) * 3 - var(--rim)),
+    calc(100% - var(--bank) - var(--step) * 2 - var(--rim)) calc(var(--tile) * 2 - var(--rim)),
+    calc(100% - var(--bank) - var(--step) - var(--rim)) calc(var(--tile) * 2 - var(--rim)),
+    calc(100% - var(--bank) - var(--step) - var(--rim)) calc(var(--tile) - var(--rim)),
+    calc(100% - var(--bank) - var(--rim)) calc(var(--tile) - var(--rim)),
+    calc(100% - var(--bank) - var(--rim)) 0
+  );
+}
+
+.pool__surface {
+  position: absolute;
+  top: var(--waterline);
+  left: 0;
+  right: 0;
+  display: flex;
+  height: var(--tile);
+  overflow: hidden;
+}
+
+/* Fallback surface: sliding highlight dashes on a light band */
+.pool__surface span {
+  flex: none;
+  width: calc(64px * var(--s));
+  height: 100%;
+  background:
+    repeating-linear-gradient(90deg,
+      transparent 0 calc(var(--px) * 5),
+      rgb(255 255 255 / 0.45) calc(var(--px) * 5) calc(var(--px) * 9),
+      transparent calc(var(--px) * 9) calc(var(--px) * 16)) 0 0 / 100% calc(var(--px) * 2) repeat-x,
+    linear-gradient(var(--deep-water-light) 0 calc(var(--px) * 3), var(--deep-water) 0);
+  animation: water-fallback var(--dur-water) steps(4) infinite;
+}
+
+@keyframes water-fallback {
+  to { background-position: calc(var(--px) * 16) 0, 0 0; }
+}
+
+.pool__body {
+  position: absolute;
+  top: calc(var(--waterline) + var(--tile));
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(var(--deep-water), var(--deep-water-deep) 85%);
+}
+
+@media (max-width: 767.98px) {
+  .pool {
+    --bank: var(--tile);
+    margin-top: var(--sp-9);
+  }
+}
+
+
+/* ==========================================================================
+   11. SPRITES  (enhancement layer)
+   Phase 2: these rules apply only when the sprite exists in sprites.ts
+   (e.g. a data-sprites attribute on <html>, or per component). In the mock
+   they apply unless the "show CSS fallbacks" box is ticked.
+   :where() keeps specificity at the plain class level.
+   ========================================================================== */
+:where(body:not(:has(#mock-fallbacks:checked))) {
+
+  /* --- Surface --- */
+  & .sun {
+    background: var(--spr-sky-sun) center / 114px 114px no-repeat;
+  }
+
+  & .cloud {
+    background: center / 100% 100% no-repeat;
+    box-shadow: none;
+    clip-path: none;
+  }
+  & .cloud--1 { background-image: var(--spr-cloud-1); }
+  & .cloud--2 { background-image: var(--spr-cloud-2); }
+  & .cloud--3 { background-image: var(--spr-cloud-3); }
+  & .cloud--4 { background-image: var(--spr-cloud-4); }
+
+  & .hills { clip-path: none; background-color: transparent; }
+  & .hills--back  { background: var(--spr-hills-back) center top / 1024px 435px repeat-x; }
+  & .hills--mid   { background: var(--spr-hills-mid) center top / 1024px 435px repeat-x; }
+  & .hills--front { background: var(--spr-hills-front) center top / 1024px 600px repeat-x; }
+
+  & .tree { background: var(--spr-tree) 0 0 / 100% 100% no-repeat; }
+  & .tree::before,
+  & .tree::after { display: none; }
+
+  & .ground__grass {
+    background: var(--spr-grass) 0 0 / calc(48px * var(--s)) var(--tile) repeat-x;
+  }
+  /* Flowers and tall grass along the top of the grass. They sway in the
+     wind: the strip slants left and right from its base (skewX), which keeps
+     the pixels crisp. It overhangs both edges so the slant never shows a gap. */
+  & .ground__grass::before {
+    content: "";
+    position: absolute;
+    left: calc(var(--tile) * -1);
+    right: calc(var(--tile) * -1);
+    bottom: calc(100% - var(--px) * 4);
+    height: calc(34px * var(--s-tree));
+    background: var(--spr-plants) var(--tile) 100% / calc(377px * var(--s-tree)) 100% repeat-x;
+    transform-origin: 50% 100%;
+    animation: grass-sway var(--dur-grass-sway) ease-in-out infinite alternate;
+  }
+
+  & .ground__dirt {
+    background: var(--spr-dirt) 0 0 / calc(48px * var(--s)) calc(48px * var(--s)) repeat;
+  }
+
+  /* --- Walls and edges --- */
+  & .layer--underground::before {
+    background: var(--spr-wall-stone) 0 0 / calc(160px * var(--s)) calc(96px * var(--s)) repeat;
+  }
+  & .layer--caverns::before {
+    background: var(--spr-wall-cavern) 0 0 / calc(160px * var(--s)) calc(96px * var(--s)) repeat;
+  }
+  & .layer--deep::before {
+    background: var(--spr-wall-deep) 0 0 / calc(160px * var(--s)) calc(96px * var(--s)) repeat;
+    filter: var(--deep-wall-filter);
+  }
+
+  & .layer__edge {
+    background: 0 100% / calc(160px * var(--s)) var(--tile) repeat-x;
+    -webkit-mask: none;
+    mask: none;
+  }
+  & .layer__edge--dirt-stone    { background-image: var(--spr-edge-dirt-stone); }
+  & .layer__edge--stone-cavern  { background-image: var(--spr-edge-stone-cavern); }
+
+  /* The cavern1->cavern2 strip is fully opaque (a straight band), so it is
+     used as a stalactite fringe and the darkened deep wall rises through it
+     in stepped teeth. The ::after wall lines up with the layer's own wall. */
+  & .layer__edge--cavern-deep {
+    height: calc(var(--tile) * 2);
+    background-image: var(--spr-edge-cavern-deep);
+  }
+  & .layer__edge--cavern-deep::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--spr-wall-deep) 0 calc(var(--tile) * 2 - 96px * var(--s)) / calc(160px * var(--s)) calc(96px * var(--s)) repeat;
+    filter: var(--deep-wall-filter);
+    -webkit-mask: var(--edge-teeth) var(--edge-shift) 0 / calc(48px * var(--s)) 100% repeat-x;
+    mask: var(--edge-teeth) var(--edge-shift) 0 / calc(48px * var(--s)) 100% repeat-x;
+  }
+
+  /* --- Underground --- */
+  & .mineshaft::before {
+    background: var(--spr-rope) center top / var(--tile) var(--tile) repeat-y;
+  }
+  & .mineshaft::after {
+    width: calc(10px * var(--s));
+    height: calc(32px * var(--s));
+    top: calc(var(--tile) * -1);
+    background: var(--spr-rope-top) 0 0 / 100% 100% no-repeat;
+    box-shadow: none;
+  }
+  & .timeline-entry__hook {
+    background: var(--spr-rope-h) 0 center / var(--tile) var(--tile) repeat-x;
+  }
+  & .torch {
+    background: var(--spr-torch) 0 0 / 100% 100% no-repeat;
+  }
+
+  /* --- Caverns --- */
+  & .chest__lid {
+    background: var(--spr-chest) 0 0 / 100% auto no-repeat;
+    box-shadow: none;
+  }
+  & .chest__base {
+    background: var(--spr-chest) 0 100% / 100% auto no-repeat;
+    box-shadow: none;
+  }
+  & .ledge {
+    background:
+      var(--spr-ledge-cap-l) 0 0 / var(--tile) var(--tile) no-repeat,
+      var(--spr-ledge-cap-r) 100% 0 / var(--tile) var(--tile) no-repeat;
+    box-shadow: none;
+    clip-path: none;
+  }
+  /* Key cursor over the chest sprite only (the ledge, label and links keep
+     the normal pointer). The click point is the key's tip at the bottom
+     (14, 47). The first line is for browsers without image-set() in cursor. */
+  & .chest__sprite {
+    cursor: var(--spr-cursor-key) 14 47, pointer;
+    cursor: image-set(var(--spr-cursor-key) 1x, var(--spr-cursor-key-2x) 2x) 14 47, pointer;
+  }
+
+  & .ledge::before {
+    content: "";
+    position: absolute;
+    inset: 0 var(--tile);
+    background: var(--spr-ledge) 0 0 / calc(48px * var(--s)) var(--tile) repeat-x;
+  }
+
+  /* --- Deep caverns --- */
+  & .gem-vein {
+    background: var(--gem-tile) 0 0 / var(--tile) var(--tile) repeat;
+    box-shadow: none;
+  }
+  & .gem-vein--ruby     { --gem-tile: var(--spr-ruby); }
+  & .gem-vein--sapphire { --gem-tile: var(--spr-sapphire); }
+
+  & .pool__stone {
+    background:
+      var(--spr-stone-top) 0 0 / calc(48px * var(--s)) var(--tile) repeat-x,
+      var(--spr-stone) 0 var(--tile) / calc(48px * var(--s)) calc(48px * var(--s)) repeat;
+  }
+  & .pool__surface span {
+    background: var(--spr-water) 0 0 / calc(1088px * var(--s)) var(--tile) no-repeat;
+    animation-name: water;
+    animation-timing-function: steps(17);
+  }
+
+  /* --- Icons: cream normally, gold on hover (matching the button text) --- */
+  & .icon {
+    display: block;
+    background: var(--icon) center / 100% 100% no-repeat;
+  }
+  & .link-button:hover .icon {
+    background-image: var(--icon-hover);
+  }
+}
+
+/* Grass and flowers lean one way, then the other */
+@keyframes grass-sway {
+  from { transform: skewX(var(--grass-sway-angle)); }
+  to   { transform: skewX(calc(var(--grass-sway-angle) * -1)); }
+}
+
+/* 17 frames x 64px: one steps() jump per frame */
+@keyframes water {
+  to { background-position: calc(-1088px * var(--s)) 0; }
+}
+
+
+/* ==========================================================================
+   12. REDUCED MOTION
+   No parallax (Phase 2 skips the scroll handler), still clouds, still grass,
+   still water, and chests switch between closed and open with no lid animation.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .chest__lid { transition: none !important; }
+  .pool__surface span { animation: none !important; }
+  .cloud { animation: none !important; }      /* rests at --cloud-x */
+  .ground__grass::before { animation: none !important; }   /* grass stands still */
+}
+
+
+/* ==========================================================================
+   13. MOCK-ONLY HELPERS  (do not port)
+   ========================================================================== */
+.mock-toggle__input {
+  position: fixed;
+  left: var(--sp-3);
+  bottom: var(--sp-3);
+  z-index: 101;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--ui-gold);
+}
+.mock-toggle {
+  position: fixed;
+  left: var(--sp-3);
+  bottom: var(--sp-3);
+  z-index: 100;
+  padding: 6px var(--sp-3) 6px 32px;
+  font: 600 12px/20px var(--font-body);
+  color: #111;
+  background: #ffd84a;
+  border: 2px solid #111;
+  cursor: pointer;
+}

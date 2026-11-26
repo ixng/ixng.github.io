@@ -1,0 +1,10 @@
+# Terraria sprites are owned by Re-Logic: reference only, never commit or deploy.
+reference-sprites/
+public/sprites/
+mock/sprites/
+
+# Tooling
+node_modules/
+dist/
+.DS_Store
+__pycache__/
