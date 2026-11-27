@@ -1,0 +1,53 @@
+.mineshaft {
+  position: relative;
+  display: grid;
+  gap: var(--sp-8);
+  padding-top: calc(var(--tile) * 2);
+}
+
+/* The rope: from the top of the list down through the rest of the layer. */
+.mineshaft::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: calc(var(--layer-pad) * -1);
+  left: calc(50% - var(--tile) / 2);
+  width: var(--tile);
+  background:
+    repeating-linear-gradient(
+      180deg,
+      var(--ug-rope) 0 calc(var(--px) * 3),
+      var(--ug-rope-dark) 0 calc(var(--px) * 4)
+    ) center / calc(var(--px) * 6) 100% no-repeat;
+}
+
+/* Rope anchor at the top */
+.mineshaft::after {
+  content: "";
+  position: absolute;
+  top: calc(var(--px) * -4);
+  left: calc(50% - var(--px) * 5);
+  width: calc(var(--px) * 10);
+  height: calc(var(--px) * 8);
+  background: var(--ug-rope-dark);
+  box-shadow: inset 0 0 0 var(--px) #2a2010;
+}
+
+/* Below the wide breakpoint the rope moves to the left and every panel hangs
+   to its right (see TimelineEntry). */
+@media (max-width: 1279.98px) {
+  .mineshaft { padding-top: calc(var(--tile) * 1.5); }
+  .mineshaft::before { left: 0; }
+  .mineshaft::after { left: calc(var(--tile) / 2 - var(--px) * 5); }
+}
+
+:global([data-sprites="on"]) .mineshaft::before {
+  background: var(--spr-rope) center top / var(--tile) var(--tile) repeat-y;
+}
+:global([data-sprites="on"]) .mineshaft::after {
+  width: calc(10px * var(--s));
+  height: calc(32px * var(--s));
+  top: calc(var(--tile) * -1);
+  background: var(--spr-rope-top) 0 0 / 100% 100% no-repeat;
+  box-shadow: none;
+}

@@ -1,0 +1,23 @@
+/* Hidden with no sprites (the text label carries the meaning). Plain
+   background images, not CSS masks: browsers refuse mask images on pages
+   opened from disk, which hid the icons in the mock. */
+.icon {
+  display: none;
+  flex: none;
+  width: calc(16px * var(--s-icon));
+  height: calc(16px * var(--s-icon));
+}
+
+.github   { --icon: var(--spr-icon-github);   --icon-hover: var(--spr-icon-github-hover); }
+.linkedin { --icon: var(--spr-icon-linkedin); --icon-hover: var(--spr-icon-linkedin-hover); }
+.email    { --icon: var(--spr-icon-email);    --icon-hover: var(--spr-icon-email-hover); }
+.cv       { --icon: var(--spr-icon-cv);       --icon-hover: var(--spr-icon-cv-hover); }
+
+/* Cream normally, gold while the link around it is hovered (matching its text) */
+:global([data-sprites="on"]) .icon {
+  display: block;
+  background: var(--icon) center / 100% 100% no-repeat;
+}
+:global([data-sprites="on"]) a:hover > .icon {
+  background-image: var(--icon-hover);
+}

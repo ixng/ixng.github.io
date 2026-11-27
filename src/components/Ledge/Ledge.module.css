@@ -1,0 +1,33 @@
+/* One tile tall, stepped ends */
+.ledge {
+  --notch: calc(var(--px) * 2);
+  position: relative;
+  width: 100%;
+  height: var(--tile);
+  background: var(--cav-ledge);
+  box-shadow:
+    inset 0 calc(var(--px) * 2) 0 var(--cav-ledge-light),
+    inset 0 calc(var(--px) * -3) 0 var(--cav-ledge-dark);
+  clip-path: polygon(
+    var(--notch) 0, calc(100% - var(--notch)) 0, calc(100% - var(--notch)) var(--notch),
+    100% var(--notch), 100% calc(100% - var(--notch) * 2), calc(100% - var(--notch)) calc(100% - var(--notch) * 2),
+    calc(100% - var(--notch)) 100%, var(--notch) 100%, var(--notch) calc(100% - var(--notch) * 2),
+    0 calc(100% - var(--notch) * 2), 0 var(--notch), var(--notch) var(--notch)
+  );
+  cursor: pointer;
+}
+
+/* Sprite: end caps on the element, the middle tiles on ::before */
+:global([data-sprites="on"]) .ledge {
+  background:
+    var(--spr-ledge-cap-l) 0 0 / var(--tile) var(--tile) no-repeat,
+    var(--spr-ledge-cap-r) 100% 0 / var(--tile) var(--tile) no-repeat;
+  box-shadow: none;
+  clip-path: none;
+}
+:global([data-sprites="on"]) .ledge::before {
+  content: "";
+  position: absolute;
+  inset: 0 var(--tile);
+  background: var(--spr-ledge) 0 0 / calc(48px * var(--s)) var(--tile) repeat-x;
+}

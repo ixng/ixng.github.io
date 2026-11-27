@@ -1,0 +1,9 @@
+/* One chest per row, stacked top to bottom */
+.chests {
+  display: grid;
+  gap: var(--sp-7);
+}
+
+@media (max-width: 767.98px) {
+  .chests { gap: var(--sp-6); }
+}

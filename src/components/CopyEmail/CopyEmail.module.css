@@ -1,0 +1,41 @@
+.email {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-4);
+  margin-top: var(--sp-5);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--ui-tag-bg);
+  box-shadow: inset 0 0 0 2px var(--ui-tag-edge);
+}
+
+.label {
+  font-family: var(--font-pixel);
+  font-size: var(--fs-sm);
+  color: var(--ui-text-muted);
+}
+
+.address {
+  flex: 1 1 auto;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+/* Same pixel button as LinkButton, a bit smaller. The size overrides use
+   `.email .button` so they win whichever stylesheet loads first. */
+.button {
+  composes: button from "../LinkButton/LinkButton.module.css";
+}
+
+.email .button {
+  min-height: 44px;
+  padding: var(--sp-1) var(--sp-4);
+  font-size: var(--fs-md);
+}
+
+.email .copied {
+  --btn-bg: var(--ui-panel-hi);
+  color: var(--ui-gold);
+}

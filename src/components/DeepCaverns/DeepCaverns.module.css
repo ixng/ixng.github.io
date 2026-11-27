@@ -1,0 +1,15 @@
+.contact {
+  --panel-pad: var(--sp-6);
+  max-width: 640px;
+}
+
+.lead {
+  font-size: var(--fs-lg);
+  line-height: 1.4;
+}
+
+.links { margin-top: var(--sp-5); }
+
+@media (max-width: 767.98px) {
+  .contact { --panel-pad: var(--sp-5) var(--sp-4); }
+}

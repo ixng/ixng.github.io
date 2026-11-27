@@ -1,0 +1,235 @@
+/* ==========================================================================
+   Global styles: design tokens, base styles and a few shared utilities.
+   Tokens are copied from the top of mock/styles.css. Component styles live in
+   each component's .module.css.
+
+   Sprites: src/assets/sprites.ts sets one --spr-<name> custom property per
+   sprite file on <html>, plus data-sprites="on". Component CSS uses sprite
+   URLs only inside `:global([data-sprites="on"])` rules, so with no sprites
+   every element falls back to plain CSS.
+   ========================================================================== */
+
+/* ---------- Design tokens ---------- */
+:root {
+  /* --- Sprite scale: whole numbers only (16px grid, pixelated) --- */
+  --s: 3;                             /* tiles, chest, torch, rope, ledges */
+  --s-tree: 2;                        /* surface trees */
+  --s-icon: 2;                        /* 16px link icons */
+  --px: calc(1px * var(--s));         /* one sprite pixel at tile scale */
+  --tile: calc(16px * var(--s));      /* one 16px tile at tile scale */
+
+  /* --- Spacing scale (4px base) --- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --sp-8: 64px;
+  --sp-9: 96px;
+  --sp-10: 128px;
+
+  /* --- Font stacks --- */
+  --font-pixel: "Pixelify Sans", "Silkscreen", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* --- Type scale --- */
+  --fs-xs: 0.8125rem;
+  --fs-sm: 0.9375rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.25rem;
+  --fs-xl: 1.5rem;
+  --fs-2xl: clamp(2rem, 1.4rem + 2.4vw, 2.75rem);
+  --fs-3xl: clamp(3rem, 1.6rem + 5.5vw, 5.5rem);
+  --lh-body: 1.55;
+  --lh-tight: 1.1;
+
+  /* --- Breakpoints. Reference values only: var() does not work inside
+         @media, so the media queries below repeat these literals. --- */
+  --bp-mobile: 768px;     /* below: mobile layout, no depth meter, --s: 2 */
+  --bp-wide: 1280px;      /* at/above: chest loot gets its own column, timeline alternates */
+
+  /* --- Layout --- */
+  --content-max: 1120px;
+  --gutter: var(--sp-6);
+  --meter-w: 184px;               /* room kept clear on the right for the depth meter */
+  --layer-pad: var(--sp-9);
+
+  /* --- Palette: UI chrome (panels, buttons, tags, focus) --- */
+  --ui-panel: #222b63;
+  --ui-panel-hi: #2f3b85;         /* hover fill */
+  --ui-panel-edge: #6d80d9;       /* inner frame line */
+  --ui-panel-line: #0b0f2e;       /* outer frame line */
+  --ui-text: #f5f0e4;
+  --ui-text-muted: #c9cfee;
+  --ui-gold: #ffd84a;             /* Terraria hover-text yellow: hover, focus, open */
+  --ui-tag-bg: #12183f;
+  --ui-tag-edge: #3b4796;
+  --ui-tag-text: #d6dcff;
+
+  /* --- Palette: 1. Surface --- */
+  --surface-sky-top: #3d82e0;
+  --surface-sky-bottom: #b8dcfb;
+  --surface-ink: #0c1833;         /* text on the sky */
+  --surface-sun: #fff3c4;
+  --surface-cloud: #f4f8ff;
+  --surface-cloud-shade: #cddff5;
+  --surface-hill-far: #8ea6d8;
+  --surface-hill-mid: #57a9a6;
+  --surface-hill-near: #4f8f3a;
+  --surface-grass: #2f9a3c;
+  --surface-grass-light: #5ad16a;
+  --surface-grass-dark: #1b5e25;
+  --surface-dirt: #8b5e40;
+  --surface-dirt-dark: #64412b;
+  --surface-dirt-light: #a5734f;
+  --surface-bark: #8b6440;
+  --surface-bark-dark: #4f3720;
+  --surface-leaf: #23864a;
+  --surface-leaf-dark: #145a30;
+
+  /* --- Palette: 2. Underground --- */
+  --ug-wall: #3d3a34;
+  --ug-wall-dark: #24221e;
+  --ug-wall-light: #6a655b;
+  --ug-rope: #a08550;
+  --ug-rope-dark: #5e4a24;
+  --ug-torch-stick: #6b4a2a;
+  --ug-torch-flame: #ffb340;
+  --ug-torch-core: #fff1a8;
+  --ug-torch-glow: rgba(255, 170, 64, 0.24);
+
+  /* --- Palette: 3. Caverns --- */
+  --cav-wall: #47332a;
+  --cav-wall-dark: #291c16;
+  --cav-wall-light: #8a6450;
+  --cav-ledge: #7a7a7a;
+  --cav-ledge-light: #a8a8a8;
+  --cav-ledge-dark: #3a3a3a;
+  --cav-chest-gold: #d5c060;
+  --cav-chest-gold-light: #efe393;
+  --cav-chest-wood: #785c19;
+  --cav-chest-wood-dark: #5b450f;
+  --cav-chest-iron: #93a0a3;
+  --cav-chest-line: #202020;
+  --cav-chest-inside: #1a1206;
+  --cav-chest-shine: #ffe27a;
+
+  /* --- Palette: 4. Deep caverns --- */
+  --deep-wall: #1d1a1c;
+  --deep-wall-dark: #0e0c10;
+  --deep-wall-light: #34302f;
+  --deep-wall-filter: brightness(0.55) saturate(0.8);   /* darkens the cavern2 sprite */
+  --deep-stone: #4d4b52;
+  --deep-stone-dark: #2a2930;
+  --deep-stone-light: #6d6b74;
+  --deep-ruby: #e2365b;
+  --deep-sapphire: #3f7dff;
+  --deep-water: #1f4fc9;
+  --deep-water-light: #6b97f5;
+  --deep-water-deep: #0c2470;
+  --deep-glow: rgba(70, 130, 255, 0.22);
+
+  /* --- Text placed straight on cave walls (headings only) --- */
+  --wall-text: #f5efe2;
+  --wall-text-muted: #e3d8c4;
+  --wall-text-shadow: 0 var(--px) 0 #000, var(--px) var(--px) 0 #000;
+
+  /* --- Motion --- */
+  --dur-lid: 200ms;               /* chest lid: 3 steps */
+  --lid-lift: calc(var(--px) * -6);
+  --dur-water: 1.7s;              /* 17 frames, about 10 fps */
+  --dur-cloud-far: 180s;          /* one crossing of the sky, far clouds */
+  --dur-cloud-near: 120s;         /* one crossing of the sky, near clouds */
+  --dur-grass-sway: 2.4s;         /* one lean, left to right (then back) */
+  --grass-sway-angle: 4deg;       /* how far the grass leans each way */
+  /* Parallax rates for the Phase 2 scroll handler: translateY(scrollY * rate).
+     The same numbers are on the elements as data-parallax. */
+  --parallax-cloud-far: 0.5;
+  --parallax-cloud-near: 0.3;
+  --parallax-hills-back: 0.35;
+  --parallax-hills-mid: 0.22;
+  --parallax-hills-front: 0.1;
+  --parallax-trees: 0;            /* trees stay planted on the grass */
+
+  /* --- Jagged edge shape: pixel-stepped teeth (inline SVG, not a sprite) --- */
+  --edge-teeth: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 32' preserveAspectRatio='none' shape-rendering='crispEdges'%3E%3Cpath d='M0 32V24H4V18H8V12H12V6H16V2H20V8H24V14H28V20H32V16H36V10H40V14H44V22H48V32Z'/%3E%3C/svg%3E");
+}
+
+@media (max-width: 767.98px) {
+  :root {
+    --s: 2;
+    --s-tree: 1;
+    --gutter: var(--sp-4);
+    --layer-pad: var(--sp-8);
+  }
+}
+
+/* Parallax input: the scroll handler (src/hooks/useScrollTracking.ts) writes
+   the scroll position here. Elements move by translateY(var(--scroll-y) * rate). */
+:root { --scroll-y: 0px; }
+
+
+/* ---------- Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  image-rendering: pixelated;     /* inherited: every sprite stays crisp */
+  font-variant-ligatures: none;   /* Pixelify Sans turns "fi" into a glyph that reads as "A" */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--fs-md);
+  line-height: var(--lh-body);
+  color: var(--wall-text);
+  background: var(--deep-wall-dark);
+}
+
+main { overflow-x: clip; }
+
+h1, h2, h3 {
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-weight: 600;
+  line-height: var(--lh-tight);
+}
+
+p, ul, ol { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+
+:focus-visible {
+  outline: 3px solid var(--ui-gold);
+  outline-offset: 3px;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: fixed;
+  top: var(--sp-2);
+  left: var(--sp-2);
+  z-index: 200;
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--ui-panel);
+  color: var(--ui-text);
+  font-family: var(--font-pixel);
+  transform: translateY(-200%);
+}
+.skip-link:focus { transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}

@@ -1,0 +1,67 @@
+.sky {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sun {
+  position: absolute;
+  top: var(--sp-6);
+  right: max(8%, calc(var(--meter-w) + var(--sp-7)));
+  width: 114px;
+  height: 114px;
+  background: radial-gradient(circle, var(--surface-sun) 0 30%, rgb(255 243 196 / 0.45) 31% 42%, transparent 62%);
+}
+
+/* Clouds drift left to right and loop, using the `translate` property.
+   Parallax uses `transform` (from --scroll-y), so the two never fight.
+   Negative delays spread the clouds across the sky on load. --cloud-x is
+   where each cloud rests when motion is reduced. --rate is its parallax
+   rate. Fallback: one blocky cloud per element. */
+.cloud {
+  position: absolute;
+  left: 0;
+  translate: var(--cloud-x) 0;
+  transform: translateY(calc(var(--scroll-y) * var(--rate)));
+  animation: cloud-drift var(--cloud-dur) linear var(--cloud-delay) infinite;
+  background: var(--surface-cloud);
+  box-shadow: inset 0 calc(var(--px) * -3) 0 var(--surface-cloud-shade);
+  clip-path: polygon(
+    8% 100%, 8% 72%, 18% 72%, 18% 50%, 34% 50%, 34% 30%, 58% 30%, 58% 44%,
+    72% 44%, 72% 62%, 86% 62%, 86% 78%, 94% 78%, 94% 100%
+  );
+}
+
+/* Far clouds (1, 3) are slower than near ones (2, 4) */
+.cloud1 { top: 4%;  width: 272px; height: 125px; --rate: 0.45; --cloud-x: 2vw;  --cloud-dur: var(--dur-cloud-far);  --cloud-delay: calc(var(--dur-cloud-far) * -0.15); }
+.cloud2 { top: 10%; width: 314px; height: 133px; --rate: 0.3;  --cloud-x: 44vw; --cloud-dur: var(--dur-cloud-near); --cloud-delay: calc(var(--dur-cloud-near) * -0.55); }
+.cloud3 { top: 34%; width: 270px; height: 142px; --rate: 0.5;  --cloud-x: 64vw; --cloud-dur: var(--dur-cloud-far);  --cloud-delay: calc(var(--dur-cloud-far) * -0.7); }
+.cloud4 { top: 46%; width: 300px; height: 130px; --rate: 0.35; --cloud-x: -6vw; --cloud-dur: var(--dur-cloud-near); --cloud-delay: calc(var(--dur-cloud-near) * -0.05); }
+
+@keyframes cloud-drift {
+  from { translate: -100% 0; }    /* just off the left edge */
+  to   { translate: 100vw 0; }    /* just off the right edge */
+}
+
+@media (max-width: 767.98px) {
+  .cloud2, .cloud4 { display: none; }
+  .cloud3 { top: 40%; --cloud-x: 52vw; }
+  .sun { right: var(--sp-4); }
+}
+
+:global([data-sprites="on"]) .sun {
+  background: var(--spr-sky-sun) center / 114px 114px no-repeat;
+}
+:global([data-sprites="on"]) .cloud {
+  background: center / 100% 100% no-repeat;
+  box-shadow: none;
+  clip-path: none;
+}
+:global([data-sprites="on"]) .cloud1 { background-image: var(--spr-cloud-1); }
+:global([data-sprites="on"]) .cloud2 { background-image: var(--spr-cloud-2); }
+:global([data-sprites="on"]) .cloud3 { background-image: var(--spr-cloud-3); }
+:global([data-sprites="on"]) .cloud4 { background-image: var(--spr-cloud-4); }
+
+@media (prefers-reduced-motion: reduce) {
+  .cloud { animation: none; }     /* rests at --cloud-x */
+}

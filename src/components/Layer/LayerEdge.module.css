@@ -1,0 +1,43 @@
+/* Sits on top of the layer above. Fallback: pixel-stepped teeth in this
+   layer's wall colour (--wall, set by the layer). Sprite: the matching
+   160x16 transition strip. */
+.edge {
+  --edge-shift: 0px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  z-index: 2;
+  height: var(--tile);
+  pointer-events: none;
+  background: var(--wall);
+  -webkit-mask: var(--edge-teeth) var(--edge-shift) 100% / calc(48px * var(--s)) 100% repeat-x;
+  mask: var(--edge-teeth) var(--edge-shift) 100% / calc(48px * var(--s)) 100% repeat-x;
+}
+.stoneCavern { --edge-shift: calc(var(--tile) * 1.25); }
+.cavernDeep  { --edge-shift: calc(var(--tile) * 0.5); }
+
+:global([data-sprites="on"]) .edge {
+  background: 0 100% / calc(160px * var(--s)) var(--tile) repeat-x;
+  -webkit-mask: none;
+  mask: none;
+}
+:global([data-sprites="on"]) .dirtStone   { background-image: var(--spr-edge-dirt-stone); }
+:global([data-sprites="on"]) .stoneCavern { background-image: var(--spr-edge-stone-cavern); }
+
+/* The cavern-to-deep strip is fully opaque (a straight band), so it is used
+   as a stalactite fringe and the darkened deep wall rises through it in
+   stepped teeth. The ::after wall lines up with the layer's own wall. */
+:global([data-sprites="on"]) .cavernDeep {
+  height: calc(var(--tile) * 2);
+  background-image: var(--spr-edge-cavern-deep);
+}
+:global([data-sprites="on"]) .cavernDeep::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--spr-wall-deep) 0 calc(var(--tile) * 2 - 96px * var(--s)) / calc(160px * var(--s)) calc(96px * var(--s)) repeat;
+  filter: var(--deep-wall-filter);
+  -webkit-mask: var(--edge-teeth) var(--edge-shift) 0 / calc(48px * var(--s)) 100% repeat-x;
+  mask: var(--edge-teeth) var(--edge-shift) 0 / calc(48px * var(--s)) 100% repeat-x;
+}

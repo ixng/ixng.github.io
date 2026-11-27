@@ -1,0 +1,150 @@
+/* Layers, back to front: rim (dark outline), water, stone. The stone has the
+   basin clipped out of it; each row of the basin is one tile narrower than
+   the row above, like dug-out Terraria terrain. The water is clipped to the
+   same shape shrunk by --rim, so a dark tile-edge line separates the two.
+   The water line sits a few pixels below the bank, so the stone lips show. */
+.pool {
+  --bank: 12%;                          /* stone bank width at the water line */
+  --step: var(--tile);                  /* each basin row is one tile narrower per side */
+  --rim: calc(var(--px) * 2);
+  --waterline: calc(var(--px) * 4);
+  position: relative;
+  z-index: 1;
+  margin-top: var(--sp-10);
+  height: calc(var(--tile) * 4);
+}
+
+.glow {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 100%;
+  height: 260px;
+  background: radial-gradient(ellipse at 50% 100%, var(--deep-glow), transparent 70%);
+  pointer-events: none;
+}
+
+.rim,
+.water,
+.stone {
+  position: absolute;
+  inset: 0;
+}
+
+.rim {
+  top: var(--waterline);
+  left: var(--bank);
+  right: var(--bank);
+  background: var(--deep-stone-dark);
+}
+
+.stone {
+  /* fallback stone */
+  background-color: var(--deep-stone);
+  background-image:
+    linear-gradient(var(--deep-stone-light) 0 calc(var(--px) * 2), transparent 0),
+    linear-gradient(90deg, var(--deep-stone-dark) 0 var(--px), transparent var(--px));
+  background-size: 100% var(--tile), var(--tile) var(--tile);
+  background-repeat: no-repeat, repeat;
+  clip-path: polygon(
+    0 0,
+    var(--bank) 0,
+    var(--bank) var(--tile),
+    calc(var(--bank) + var(--step)) var(--tile),
+    calc(var(--bank) + var(--step)) calc(var(--tile) * 2),
+    calc(var(--bank) + var(--step) * 2) calc(var(--tile) * 2),
+    calc(var(--bank) + var(--step) * 2) calc(var(--tile) * 3),
+    calc(100% - var(--bank) - var(--step) * 2) calc(var(--tile) * 3),
+    calc(100% - var(--bank) - var(--step) * 2) calc(var(--tile) * 2),
+    calc(100% - var(--bank) - var(--step)) calc(var(--tile) * 2),
+    calc(100% - var(--bank) - var(--step)) var(--tile),
+    calc(100% - var(--bank)) var(--tile),
+    calc(100% - var(--bank)) 0,
+    100% 0,
+    100% 100%,
+    0 100%
+  );
+}
+
+/* Same outline as the hole in .pool__stone, moved in by --rim */
+.water {
+  clip-path: polygon(
+    calc(var(--bank) + var(--rim)) 0,
+    calc(var(--bank) + var(--rim)) calc(var(--tile) - var(--rim)),
+    calc(var(--bank) + var(--step) + var(--rim)) calc(var(--tile) - var(--rim)),
+    calc(var(--bank) + var(--step) + var(--rim)) calc(var(--tile) * 2 - var(--rim)),
+    calc(var(--bank) + var(--step) * 2 + var(--rim)) calc(var(--tile) * 2 - var(--rim)),
+    calc(var(--bank) + var(--step) * 2 + var(--rim)) calc(var(--tile) * 3 - var(--rim)),
+    calc(100% - var(--bank) - var(--step) * 2 - var(--rim)) calc(var(--tile) * 3 - var(--rim)),
+    calc(100% - var(--bank) - var(--step) * 2 - var(--rim)) calc(var(--tile) * 2 - var(--rim)),
+    calc(100% - var(--bank) - var(--step) - var(--rim)) calc(var(--tile) * 2 - var(--rim)),
+    calc(100% - var(--bank) - var(--step) - var(--rim)) calc(var(--tile) - var(--rim)),
+    calc(100% - var(--bank) - var(--rim)) calc(var(--tile) - var(--rim)),
+    calc(100% - var(--bank) - var(--rim)) 0
+  );
+}
+
+.surface {
+  position: absolute;
+  top: var(--waterline);
+  left: 0;
+  right: 0;
+  display: flex;
+  height: var(--tile);
+  overflow: hidden;
+}
+
+/* Fallback surface: sliding highlight dashes on a light band */
+.surface span {
+  flex: none;
+  width: calc(64px * var(--s));
+  height: 100%;
+  background:
+    repeating-linear-gradient(90deg,
+      transparent 0 calc(var(--px) * 5),
+      rgb(255 255 255 / 0.45) calc(var(--px) * 5) calc(var(--px) * 9),
+      transparent calc(var(--px) * 9) calc(var(--px) * 16)) 0 0 / 100% calc(var(--px) * 2) repeat-x,
+    linear-gradient(var(--deep-water-light) 0 calc(var(--px) * 3), var(--deep-water) 0);
+  animation: water-fallback var(--dur-water) steps(4) infinite;
+}
+
+@keyframes water-fallback {
+  to { background-position: calc(var(--px) * 16) 0, 0 0; }
+}
+
+.body {
+  position: absolute;
+  top: calc(var(--waterline) + var(--tile));
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(var(--deep-water), var(--deep-water-deep) 85%);
+}
+
+@media (max-width: 767.98px) {
+  .pool {
+    --bank: var(--tile);
+    margin-top: var(--sp-9);
+  }
+}
+
+:global([data-sprites="on"]) .stone {
+  background:
+    var(--spr-stone-top) 0 0 / calc(48px * var(--s)) var(--tile) repeat-x,
+    var(--spr-stone) 0 var(--tile) / calc(48px * var(--s)) calc(48px * var(--s)) repeat;
+}
+
+/* 17 frames x 64px, about 10fps: one steps() jump per frame */
+:global([data-sprites="on"]) .surface span {
+  background: var(--spr-water) 0 0 / calc(1088px * var(--s)) var(--tile) no-repeat;
+  animation-name: water;
+  animation-timing-function: steps(17);
+}
+
+@keyframes water {
+  to { background-position: calc(-1088px * var(--s)) 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .surface span { animation: none !important; }
+}

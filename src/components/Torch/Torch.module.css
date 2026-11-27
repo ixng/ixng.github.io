@@ -1,0 +1,33 @@
+/* Static: no flicker. Fallback: stick and flame drawn with gradients. */
+.torch {
+  position: absolute;
+  top: 0;
+  width: calc(14px * var(--s));
+  height: calc(16px * var(--s));
+  background:
+    linear-gradient(var(--ug-torch-core), var(--ug-torch-core)) calc(var(--px) * 9) calc(var(--px) * 2) / calc(var(--px) * 2) calc(var(--px) * 2) no-repeat,
+    linear-gradient(var(--ug-torch-flame), var(--ug-torch-flame)) calc(var(--px) * 8) 0 / calc(var(--px) * 4) calc(var(--px) * 5) no-repeat,
+    linear-gradient(var(--ug-torch-stick), var(--ug-torch-stick)) calc(var(--px) * 9) calc(var(--px) * 5) / calc(var(--px) * 2) calc(var(--px) * 11) no-repeat;
+}
+
+/* Static light pool around the flame */
+.torch::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 20%;
+  width: 360px;
+  height: 360px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, var(--ug-torch-glow) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+@media (max-width: 1279.98px) {
+  .torch::before { width: 220px; height: 220px; }
+}
+
+:global([data-sprites="on"]) .torch {
+  background: var(--spr-torch) 0 0 / 100% 100% no-repeat;
+}

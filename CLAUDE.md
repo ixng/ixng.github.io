@@ -24,9 +24,9 @@ The work happens in two phases, done by separate agents. Do not start Phase 2 un
 
 ## Assets
 
-- `reference-sprites/` holds real Terraria sprites from Ian's PC. They are owned by Re-Logic and are **reference only**. They must never be committed or deployed. Keep `reference-sprites/` in `.gitignore`. During Phase 2, serve them from `public/sprites/`, which is also gitignored until Ian replaces them with his own art.
+- `reference-sprites/` holds real Terraria sheets from Ian's PC, owned by Re-Logic. The raw sheets stay local (`reference-sprites/` is in `.gitignore`). The cropped sprites made from them live in `public/sprites/`, which **is committed and deployed** (Ian's decision, 2026-11-26: he found Re-Logic allows reuse of its art outside games). Ian may still replace them with his own art.
 - Every sprite path goes through one map, `src/assets/sprites.ts`, so swapping in Ian's original art means changing files, not components.
-- Every element that uses a sprite has a CSS fallback (solid colour or simple gradient), so the page stays readable and on-theme with no images loaded. The deployed site will run on fallbacks until the original art exists.
+- Every element that uses a sprite has a CSS fallback (solid colour or simple gradient), so the page stays readable and on-theme with no images loaded (or while they are still loading).
 - Sprites are drawn on a 16×16 px grid. Scale only by whole numbers (2× or 3×) and use `image-rendering: pixelated`. Never smooth or blur sprites.
 - Animated sprites are horizontal strips of equal-width frames, animated with CSS `steps()`.
 - Fonts: an open-licence pixel font for headings (e.g. Pixelify Sans or Silkscreen, self-hosted or Google Fonts) and a clean sans-serif for body text. Do not use Terraria's own font.
@@ -39,7 +39,8 @@ Four layers, top to bottom. Each layer is as tall as its content (no forced full
 
 ### 1. Surface (intro)
 
-- Ian's name (pixel font), a one-line tagline that leans into building and shipping projects, and link buttons: **GitHub, CV download, Email**. No LinkedIn here.
+- Ian's name (pixel font), a one-line tagline ("I like learning new things."), and link buttons: **GitHub, CV download, Email**. No LinkedIn here.
+- Under the buttons, an overview panel with Ian's introduction, then a "Working on" panel about his next project, then an "Outside of Coding" panel with his hobbies and the Valorant rank ("top 0.5%" in gold). All his own text, added 2026-11-26 and 27.
 - No character sprite and no scroll prompt.
 - Grass and dirt ground, with trees and clouds.
 - Always daytime: blue sky gradient, sun and clouds. There is no day/night cycle or time-based change.
@@ -49,17 +50,17 @@ Four layers, top to bottom. Each layer is as tall as its content (no forced full
 
 - A mineshaft timeline: a vertical rope or ladder with panels hanging off it, lit by **static** torches (no flicker animation).
 - Entries, newest first:
-  1. Python Course Leader, Warwick Coding Society (exec), from Sep 2026
-  2. Software engineering intern, Winpact (remote, UK), Nov 2024 to Jan 2025
+  1. Python Course Leader, Warwick Code Society, from Sep 2026
+  2. Backend Software Engineer Intern, Winpact (remote, UK), Nov 2024 to Jan 2025
 - Each panel: role title, organisation, dates, 2 or 3 bullets.
 
 ### 3. Caverns (projects)
 
 - Five project chests, one per row, stacked top to bottom. In each row the chest sits on a cavern ledge on the left side of the screen, with its text to the right.
 - Desktop (1280px and up): chest | closed content | open content, side by side. Medium widths (768 to 1279px): the open content sits under the closed content, to the right of the chest. Mobile: chest and closed content side by side, open content below the row at full width.
-- Order: **valstats, Metrolink journey planner, pathfinding robot (maze), Precedent, λGPT**.
+- Order: **valstats, Metrolink journey planner, maze-solving robot controller, Precedent, λGPT**.
 - A closed chest shows: project name, one-line summary, tech tags.
-- An open chest reveals: 2 or 3 bullets, GitHub repo link, live demo link (only if the project has one).
+- An open chest reveals: 2 or 3 bullets, a GitHub repo link (only if the code can be public: the maze-solving robot is coursework, so it has none and is labelled "Coursework"), and a live demo link (only if the project has one).
 - Opening: hover on desktop, tap to toggle on touch devices. It must also open on keyboard focus and with Enter/Space, so it works without a mouse. The lid plays a short open animation.
 - An open chest must not cover a neighbouring chest's closed content. From 768px up, the open content's space is always reserved, so opening a chest never moves the other rows. On mobile it expands in place and pushes the next row down.
 
@@ -67,7 +68,7 @@ Four layers, top to bottom. Each layer is as tall as its content (no forced full
 
 - A second, deeper cavern layer. It must look clearly different from layer 3: darker stone, gem veins in the walls, and a still underground pool with an animated water surface.
 - Email (shown as text with a copy button), LinkedIn, GitHub, CV download.
-- A closing line at the bottom of the contact panel, under a thin divider: "Outside code: Top 0.5% of Valorant players." This is real, not placeholder copy. Keep it to one line.
+- The Valorant rank now lives in the Surface "Outside of Coding" panel, not in the contact panel (Ian's decision, 2026-11-27).
 
 ### Not included
 
@@ -90,7 +91,7 @@ No skills or tech stack section (tech appears only as chest tags). No contact fo
 ## Content
 
 - Use placeholder copy for the tagline, experience bullets and project text, at realistic lengths: a tagline around 10 words, bullets around 15 to 20 words, one-liners under 12 words. The layout must hold when the real copy replaces the placeholders.
-- Real values that are known now: name Ian Gitau, GitHub `ixng` (https://github.com/ixng), LinkedIn `ian-gitau-703799284` (https://www.linkedin.com/in/ian-gitau-703799284). Use placeholders for the email address and the CV path (`public/cv.pdf`).
+- Real values that are known now: name Ian Gitau, GitHub `ixng` (https://github.com/ixng), LinkedIn `ian-gitau-703799284` (https://www.linkedin.com/in/ian-gitau-703799284). Email `ian.gitau@warwick.ac.uk`. CV at `public/cv.pdf`, which is the source for the experience and project copy.
 - In Phase 2, all content lives in one typed file, `src/data/content.ts`. Components contain no hard-coded copy.
 
 ### Copy style (for when real copy is written)
@@ -134,7 +135,7 @@ src/
 - Repo: `ixng/ixng.github.io` (a user site, served from the root, so the Vite `base` stays `/`).
 - Deploy with a GitHub Actions workflow at `.github/workflows/deploy.yml`, using the official Pages actions (`actions/configure-pages`, `actions/upload-pages-artifact`, `actions/deploy-pages`). Build with `npm ci && npm run build` and upload `dist/`.
 - Ian sets Settings → Pages → Source to "GitHub Actions" himself.
-- Before pushing, check that no file from `reference-sprites/` or `public/sprites/` is tracked.
+- Before pushing, check that no file from `reference-sprites/` is tracked. `public/sprites/` is meant to be tracked.
 
 ## Working with Ian
 

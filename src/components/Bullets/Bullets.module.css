@@ -1,0 +1,19 @@
+.bullets {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.bullets li {
+  position: relative;
+  padding-left: 1.3em;
+}
+
+.bullets li::before {
+  content: "";
+  position: absolute;
+  left: 0.15em;
+  top: 0.6em;
+  width: 6px;
+  height: 6px;
+  background: var(--ui-gold);
+}

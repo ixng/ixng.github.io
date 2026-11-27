@@ -1,6 +1,6 @@
-# Terraria sprites are owned by Re-Logic: reference only, never commit or deploy.
+# Terraria art (Re-Logic). The cropped sprites in public/sprites/ are committed
+# and deployed; the raw reference sheets and the mock's copy stay local.
 reference-sprites/
-public/sprites/
 mock/sprites/
 
 # Tooling
@@ -8,3 +8,5 @@ node_modules/
 dist/
 .DS_Store
 __pycache__/
+*.local
+*.log

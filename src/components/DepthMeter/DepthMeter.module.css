@@ -1,0 +1,120 @@
+/* Fixed on the right at 768px and up; hidden on mobile. */
+.meter {
+  --notch: 4px;
+  position: fixed;
+  top: 50%;
+  right: var(--sp-4);
+  z-index: 50;
+  width: calc(var(--meter-w) - var(--sp-5));
+  padding: var(--sp-4) var(--sp-4) var(--sp-3);
+  color: var(--ui-text);
+  background: rgb(17 22 58 / 0.92);
+  box-shadow:
+    inset 0 0 0 2px var(--ui-panel-line),
+    inset 0 0 0 4px var(--ui-panel-edge);
+  clip-path: polygon(
+    var(--notch) 0, calc(100% - var(--notch)) 0,
+    calc(100% - var(--notch)) var(--notch), 100% var(--notch),
+    100% calc(100% - var(--notch)), calc(100% - var(--notch)) calc(100% - var(--notch)),
+    calc(100% - var(--notch)) 100%, var(--notch) 100%,
+    var(--notch) calc(100% - var(--notch)), 0 calc(100% - var(--notch)),
+    0 var(--notch), var(--notch) var(--notch)
+  );
+  transform: translateY(-50%);
+}
+
+@media (max-width: 767.98px) {
+  .meter { display: none; }
+}
+
+/* Like the game's "250' Underground" text. Decorative (aria-hidden). */
+.readout {
+  margin-bottom: var(--sp-3);
+  padding-bottom: var(--sp-2);
+  font-family: var(--font-pixel);
+  font-size: var(--fs-sm);
+  color: var(--ui-gold);
+  border-bottom: 2px solid var(--ui-tag-edge);
+}
+
+.list {
+  position: relative;
+  display: grid;
+  gap: var(--sp-2);
+}
+
+/* The track the nodes sit on */
+.list::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: 6px;
+  width: 4px;
+  background: var(--ui-tag-edge);
+}
+
+/* Progress marker. --marker-y (px from the top of the list) comes from the
+   component. It sits BEHIND the nodes (z-index 0 vs 1) and is smaller than
+   them, so it is only visible between nodes. No transition: it follows the
+   scroll position directly. */
+.list::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: 3px;                      /* centred on the 4px track at x = 8px */
+  width: 10px;
+  height: 10px;
+  background: var(--ui-gold);
+  box-shadow: 0 0 0 2px var(--ui-panel-line);
+  transform: translateY(calc(var(--marker-y, 14px) - 5px));
+  pointer-events: none;
+}
+
+.link {
+  position: relative;
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-1) 0;
+  color: var(--ui-text-muted);
+  text-decoration: none;
+}
+
+.link[data-layer="surface"]     { --node: var(--surface-grass); }
+.link[data-layer="underground"] { --node: var(--ug-wall-light); }
+.link[data-layer="caverns"]     { --node: var(--cav-wall-light); }
+.link[data-layer="deep"]        { --node: var(--deep-sapphire); }
+
+.node {
+  position: relative;
+  z-index: 1;                     /* above the progress marker */
+  width: 16px;
+  height: 16px;
+  background: var(--node);
+  box-shadow: inset 0 0 0 2px var(--ui-panel-line);
+}
+
+.label {
+  font-family: var(--font-pixel);
+  font-size: var(--fs-sm);
+  line-height: 1.15;
+}
+.label small {
+  display: block;
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
+  color: var(--ui-text-muted);
+}
+
+.link:hover { color: var(--ui-gold); }
+
+/* The layer in view */
+.link[aria-current="location"] {
+  color: var(--ui-text);
+}
+.link[aria-current="location"] .node {
+  box-shadow: inset 0 0 0 2px var(--ui-panel-line), 0 0 0 3px var(--ui-gold);
+}

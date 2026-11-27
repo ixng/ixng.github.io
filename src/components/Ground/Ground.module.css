@@ -1,0 +1,56 @@
+.ground { position: relative; z-index: 1; }
+
+.grass {
+  position: relative;
+  height: var(--tile);
+  background:
+    linear-gradient(
+      var(--surface-grass-light) 0 calc(var(--px) * 2),
+      var(--surface-grass) 0 calc(var(--px) * 6),
+      var(--surface-grass-dark) 0 calc(var(--px) * 8),
+      var(--surface-dirt) 0
+    );
+}
+
+.dirt {
+  height: calc(var(--tile) * 2);
+  background-color: var(--surface-dirt);
+  background-image:
+    conic-gradient(from 270deg at calc(var(--px) * 4) calc(var(--px) * 4), var(--surface-dirt-dark) 90deg, transparent 0),
+    conic-gradient(from 270deg at calc(var(--px) * 4) calc(var(--px) * 4), var(--surface-dirt-light) 90deg, transparent 0);
+  background-size: var(--tile) var(--tile), calc(var(--tile) * 1.5) calc(var(--tile) * 1.5);
+  background-position: calc(var(--px) * 3) calc(var(--px) * 5), calc(var(--px) * 11) calc(var(--px) * 10);
+}
+
+:global([data-sprites="on"]) .grass {
+  background: var(--spr-grass) 0 0 / calc(48px * var(--s)) var(--tile) repeat-x;
+}
+
+/* Flowers and tall grass along the top of the grass (sprite mode only).
+   They sway: the strip slants left and right from its base (skewX), which
+   keeps the pixels crisp. It overhangs both edges so the slant never shows
+   a gap. */
+:global([data-sprites="on"]) .grass::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--tile) * -1);
+  right: calc(var(--tile) * -1);
+  bottom: calc(100% - var(--px) * 4);
+  height: calc(34px * var(--s-tree));
+  background: var(--spr-plants) var(--tile) 100% / calc(377px * var(--s-tree)) 100% repeat-x;
+  transform-origin: 50% 100%;
+  animation: grass-sway var(--dur-grass-sway) ease-in-out infinite alternate;
+}
+
+:global([data-sprites="on"]) .dirt {
+  background: var(--spr-dirt) 0 0 / calc(48px * var(--s)) calc(48px * var(--s)) repeat;
+}
+
+@keyframes grass-sway {
+  from { transform: skewX(var(--grass-sway-angle)); }
+  to   { transform: skewX(calc(var(--grass-sway-angle) * -1)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grass::before { animation: none !important; }   /* grass stands still */
+}

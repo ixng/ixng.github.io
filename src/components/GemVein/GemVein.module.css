@@ -1,0 +1,39 @@
+/* Fallback: dark stone with square gem flecks */
+.vein {
+  position: absolute;
+  z-index: 0;
+  width: calc(var(--tile) * 4);
+  height: calc(var(--tile) * 3);
+  background-color: var(--deep-stone);
+  background-image:
+    conic-gradient(from 270deg at calc(var(--px) * 4) calc(var(--px) * 4), var(--gem) 90deg, transparent 0),
+    conic-gradient(from 270deg at calc(var(--px) * 3) calc(var(--px) * 3), var(--gem) 90deg, transparent 0),
+    linear-gradient(var(--deep-stone-light) 0 var(--px), transparent var(--px));
+  background-size: var(--tile) var(--tile), var(--tile) var(--tile), var(--tile) var(--tile);
+  background-position: calc(var(--px) * 3) calc(var(--px) * 4), calc(var(--px) * 10) calc(var(--px) * 10), 0 0;
+  box-shadow: inset 0 0 0 var(--px) var(--deep-stone-dark);
+  clip-path: polygon(
+    0 66.67%, 25% 66.67%, 25% 33.33%, 50% 33.33%, 50% 0, 100% 0, 100% 33.33%,
+    75% 33.33%, 75% 66.67%, 50% 66.67%, 50% 100%, 0 100%
+  );
+}
+.ruby     { --gem: var(--deep-ruby);     --gem-tile: var(--spr-ruby); }
+.sapphire { --gem: var(--deep-sapphire); --gem-tile: var(--spr-sapphire); }
+
+.a { top: 14%; left: calc(var(--tile) * -1); }
+.b { top: 6%;  right: 10%; transform: scaleX(-1); }
+.c { top: 52%; left: 4%; transform: scaleX(-1); }
+.d { bottom: calc(var(--tile) * 5); right: -2%; }
+
+/* Two veins on mobile */
+@media (max-width: 767.98px) {
+  .a { top: 4%; left: auto; right: calc(var(--tile) * -1.5); }
+  .b { display: none; }
+  .c { top: auto; bottom: calc(var(--tile) * 5); left: calc(var(--tile) * -1.5); }
+  .d { display: none; }
+}
+
+:global([data-sprites="on"]) .vein {
+  background: var(--gem-tile) 0 0 / var(--tile) var(--tile) repeat;
+  box-shadow: none;
+}

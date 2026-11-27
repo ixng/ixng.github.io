@@ -1,0 +1,230 @@
+/* Row layout: the chest on its ledge on the left, text on the right.
+   768-1279px: open content ("loot") sits under the label in the text column.
+   1280px and up: loot gets its own column to the right of the label.
+   The empty grid rows soak up extra height so the chest and ledge stay
+   together at the top of the row. */
+.chest {
+  --chest-col: calc(var(--tile) * 3);
+  display: grid;
+  grid-template-columns: var(--chest-col) minmax(0, 1fr);
+  grid-template-rows: auto auto 1fr auto;
+  grid-template-areas:
+    "sprite label"
+    "ledge  label"
+    ".      label"
+    ".      loot";
+  column-gap: var(--sp-5);
+  align-items: start;
+}
+
+@media (min-width: 1280px) {
+  .chest {
+    grid-template-columns: var(--chest-col) minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas:
+      "sprite label loot"
+      "ledge  label loot"
+      ".      label loot";
+  }
+}
+
+/* Phones: chest and label side by side, loot below across the full width */
+@media (max-width: 767.98px) {
+  .chest {
+    column-gap: var(--sp-4);
+    grid-template-columns: var(--chest-col) minmax(0, 1fr);
+    grid-template-areas:
+      "sprite label"
+      "ledge  label"
+      ".      label"
+      "loot   loot";
+  }
+}
+
+/* Open: every visual difference is a custom property that the parts read. */
+.open {
+  --lid-y: var(--lid-lift);
+  --chest-glow:
+    drop-shadow(var(--px) 0 0 var(--ui-gold))
+    drop-shadow(calc(var(--px) * -1) 0 0 var(--ui-gold))
+    drop-shadow(0 calc(var(--px) * -1) 0 var(--ui-gold));
+  --label-edge: var(--ui-gold);
+  --loot-visibility: visible;
+  --loot-display: block;
+  --hint: "\2212";              /* minus */
+}
+
+.sprite {
+  grid-area: sprite;
+  justify-self: center;
+  position: relative;
+  width: calc(32px * var(--s));
+  height: calc(28px * var(--s));
+  cursor: pointer;
+  filter: var(--chest-glow, none);
+}
+
+/* Lid = top 12px of the 32x28 chest, base = bottom 16px. Opening lifts the
+   lid 6px in 3 steps and shows the dark, lit interior behind it. */
+.lid,
+.base,
+.inside {
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
+.lid {
+  top: 0;
+  z-index: 2;
+  height: calc(12px * var(--s));
+  transform: translateY(var(--lid-y, 0));
+  transition: transform var(--dur-lid) steps(3, end);
+  /* fallback: gold lid with dark outline and iron latch */
+  background:
+    linear-gradient(var(--cav-chest-iron), var(--cav-chest-iron)) 50% 0 / calc(var(--px) * 4) 100% no-repeat,
+    linear-gradient(var(--cav-chest-gold-light) 0 45%, var(--cav-chest-gold) 45% 80%, var(--cav-chest-wood) 80%);
+  box-shadow: inset 0 0 0 calc(var(--px) * 2) var(--cav-chest-line);
+}
+
+.base {
+  bottom: 0;
+  z-index: 1;
+  height: calc(16px * var(--s));
+  background:
+    linear-gradient(var(--cav-chest-iron), var(--cav-chest-iron)) 50% 0 / calc(var(--px) * 4) calc(var(--px) * 6) no-repeat,
+    linear-gradient(var(--cav-chest-iron) 0 calc(var(--px) * 2), var(--cav-chest-gold) 0 55%, var(--cav-chest-wood) 55% 85%, var(--cav-chest-wood-dark) 85%);
+  box-shadow: inset 0 0 0 calc(var(--px) * 2) var(--cav-chest-line);
+}
+
+.inside {
+  top: calc(var(--px) * 2);
+  left: calc(var(--px) * 2);
+  right: calc(var(--px) * 2);
+  height: calc(12px * var(--s));
+  z-index: 0;
+  background: linear-gradient(0deg, var(--cav-chest-shine) 0 calc(var(--px) * 2), var(--cav-chest-inside) calc(var(--px) * 2));
+}
+
+.ledge { grid-area: ledge; }
+
+/* --- Closed content: label panel to the right of the chest --- */
+.label {
+  --panel-edge: var(--label-edge, var(--ui-panel-edge));
+  --panel-pad: var(--sp-4);
+  grid-area: label;
+  width: 100%;
+  cursor: pointer;
+}
+
+.title { font-size: var(--fs-lg); }
+
+.toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: var(--ui-text);
+  cursor: pointer;
+}
+.toggle:hover { color: var(--ui-gold); }
+
+.hint::before {
+  content: var(--hint, "+");
+  font-family: var(--font-pixel);
+  color: var(--ui-gold);
+}
+
+/* Small label on the closed chest, e.g. "Coursework" */
+.badge {
+  display: inline-block;
+  margin-top: var(--sp-2);
+  padding: 3px var(--sp-2) 2px;
+  font-family: var(--font-pixel);
+  font-size: var(--fs-xs);
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ui-gold);
+  background: var(--ui-tag-bg);
+  box-shadow: inset 0 0 0 2px var(--ui-tag-edge);
+}
+
+.summary {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+  color: var(--ui-text-muted);
+}
+
+.tags { margin-top: var(--sp-3); }
+
+/* --- Open content ("loot") ---
+   768px and up: its space is always reserved (visibility), so opening never
+   moves the page or covers another chest. Phones: it appears below the row
+   and pushes the next chest down. */
+.loot {
+  --panel-edge: var(--cav-chest-gold);
+  --panel-pad: var(--sp-4);
+  grid-area: loot;
+  width: 100%;
+  margin-top: var(--sp-2);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+  visibility: var(--loot-visibility, hidden);
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-4);
+  margin-top: var(--sp-4);
+  font-weight: 600;
+}
+
+.link {
+  color: var(--ui-text);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+.link:hover { color: var(--ui-gold); }
+
+@media (min-width: 1280px) {
+  .loot { margin-top: 0; }
+}
+@media (max-width: 767.98px) {
+  .loot {
+    display: var(--loot-display, none);
+    visibility: visible;
+    margin-top: var(--sp-3);
+  }
+}
+
+/* --- Sprites: both halves share the one closed-chest frame --- */
+:global([data-sprites="on"]) .lid {
+  background: var(--spr-chest) 0 0 / 100% auto no-repeat;
+  box-shadow: none;
+}
+:global([data-sprites="on"]) .base {
+  background: var(--spr-chest) 0 100% / 100% auto no-repeat;
+  box-shadow: none;
+}
+
+/* Key cursor over the chest sprite only. The click point is the key's tip
+   (14, 47). The first line is for browsers without image-set() in cursor. */
+:global([data-sprites="on"]) .sprite {
+  cursor: var(--spr-cursor-key) 14 47, pointer;
+  cursor: image-set(var(--spr-cursor-key) 1x, var(--spr-cursor-key-2x) 2x) 14 47, pointer;
+}
+
+/* Reduced motion: the chest switches between closed and open with no lid animation */
+@media (prefers-reduced-motion: reduce) {
+  .lid { transition: none; }
+}

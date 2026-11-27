@@ -1,0 +1,63 @@
+.surface {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--surface-sky-top), var(--surface-sky-bottom) 80%);
+}
+
+.intro {
+  composes: inner from "../Layer/Layer.module.css";
+  padding-top: calc(var(--sp-10) + var(--sp-5));
+  padding-bottom: var(--sp-7);
+}
+
+.name {
+  font-size: var(--fs-3xl);
+  font-weight: 700;
+  color: var(--surface-ink);
+  text-shadow: var(--px) var(--px) 0 rgb(255 255 255 / 0.6);
+}
+
+.tagline {
+  max-width: 30ch;
+  margin-top: var(--sp-4);
+  font-size: var(--fs-xl);
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--surface-ink);
+}
+
+.links { margin-top: var(--sp-6); }
+
+/* Overview, "Working on" and "Outside of Coding": body text sits on panels,
+   like every other block of text */
+.overview,
+.workingOn,
+.outsideCoding {
+  max-width: 880px;
+  line-height: var(--lh-body);
+}
+.overview { margin-top: var(--sp-6); }
+.workingOn,
+.outsideCoding { margin-top: var(--sp-4); }
+.overview p + p { margin-top: var(--sp-3); }
+
+/* White headings on the three panels */
+.panelTitle {
+  margin-bottom: var(--sp-2);
+  font-size: var(--fs-lg);
+  color: #fff;
+}
+
+/* "top 0.5%" in the Outside of Coding panel */
+.highlight {
+  font-weight: 700;
+  color: var(--ui-gold);
+}
+
+@media (max-width: 767.98px) {
+  .intro { padding-top: var(--sp-10); }
+  .tagline { font-size: var(--fs-lg); }
+  .overview,
+  .workingOn,
+  .outsideCoding { --panel-pad: var(--sp-4); font-size: var(--fs-sm); }
+}

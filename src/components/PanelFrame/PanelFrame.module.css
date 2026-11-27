@@ -1,0 +1,28 @@
+/* No 9-slice sprite exists yet, so the frame is CSS: dark outer line, light
+   inner line, one-pixel notched corners. When you draw a frame, add it here
+   as border-image inside :global([data-sprites="on"]) and keep this as the
+   fallback.
+
+   Components that use a panel change it through custom properties rather
+   than overriding these rules:
+     --panel-pad   padding (default --sp-5)
+     --panel-edge  inner frame colour (default --ui-panel-edge) */
+.panel {
+  --notch: calc(var(--px) * 2);
+  position: relative;
+  padding: var(--panel-pad, var(--sp-5));
+  color: var(--ui-text);
+  background: var(--ui-panel);
+  box-shadow:
+    inset 0 0 0 var(--px) var(--ui-panel-line),
+    inset 0 0 0 calc(var(--px) * 2) var(--panel-edge, var(--ui-panel-edge)),
+    inset 0 calc(var(--px) * -4) 0 0 rgb(0 0 0 / 0.18);
+  clip-path: polygon(
+    var(--notch) 0, calc(100% - var(--notch)) 0,
+    calc(100% - var(--notch)) var(--notch), 100% var(--notch),
+    100% calc(100% - var(--notch)), calc(100% - var(--notch)) calc(100% - var(--notch)),
+    calc(100% - var(--notch)) 100%, var(--notch) 100%,
+    var(--notch) calc(100% - var(--notch)), 0 calc(100% - var(--notch)),
+    0 var(--notch), var(--notch) var(--notch)
+  );
+}

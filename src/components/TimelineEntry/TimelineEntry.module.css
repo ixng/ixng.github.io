@@ -1,0 +1,79 @@
+.entry {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr var(--tile) 1fr;
+  align-items: start;
+}
+.right .panel { grid-column: 3; }
+.left  .panel { grid-column: 1; grid-row: 1; }
+
+/* Short horizontal rope from the main rope to the panel */
+.hook {
+  position: absolute;
+  top: calc(var(--sp-5) + var(--px) * 2);
+  height: var(--tile);
+  width: calc(var(--tile) * 1.5);
+  background:
+    repeating-linear-gradient(
+      90deg,
+      var(--ug-rope) 0 calc(var(--px) * 3),
+      var(--ug-rope-dark) 0 calc(var(--px) * 4)
+    ) center / 100% calc(var(--px) * 6) no-repeat;
+}
+.right .hook { left: calc(50% - var(--tile) * 0.5); }
+.left  .hook { right: calc(50% - var(--tile) * 0.5); }
+
+.panel {
+  margin-inline: var(--tile);
+}
+
+/* Torch on the wall, on the side of the rope opposite the panel */
+.right .torch { right: calc(50% + var(--tile) * 2); }
+.left  .torch { left: calc(50% + var(--tile) * 2); }
+
+.role { font-size: var(--fs-xl); }
+
+.org {
+  margin-top: var(--sp-2);
+  font-weight: 600;
+}
+
+.dates {
+  margin-top: var(--sp-1);
+  font-family: var(--font-pixel);
+  font-size: var(--fs-sm);
+  color: var(--ui-text-muted);
+}
+
+.bullets {
+  margin-top: var(--sp-4);
+  font-size: var(--fs-sm);
+}
+
+/* Below the wide breakpoint every panel hangs to the right of the rope;
+   two columns would make the panels too narrow to read. */
+@media (max-width: 1279.98px) {
+  .entry { grid-template-columns: var(--tile) 1fr; }
+  .right .panel,
+  .left  .panel { grid-column: 2; grid-row: 1; }
+  .panel { margin-inline: var(--tile) 0; max-width: 680px; }
+
+  .right .hook,
+  .left  .hook { left: calc(var(--tile) / 2); right: auto; }
+
+  /* Torch mounted on the wall just above the panel's top-right corner */
+  .right .torch,
+  .left  .torch {
+    left: auto;
+    right: var(--sp-4);
+    top: calc(var(--tile) * -1 - var(--sp-1));
+  }
+}
+
+@media (max-width: 767.98px) {
+  .panel { --panel-pad: var(--sp-4); }
+}
+
+:global([data-sprites="on"]) .hook {
+  background: var(--spr-rope-h) 0 center / var(--tile) var(--tile) repeat-x;
+}
